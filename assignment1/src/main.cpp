@@ -8,105 +8,92 @@
 using namespace cv;
 using namespace std;
 
+void mouseCallback( int event, int x, int y, int, void* );
+Mat transformImage(Mat src, vector<Point2f> start_points);
+Mat transformImage(Mat src, vector<Point2f> start_points, vector<Point2f> end_points);
+vector<Point2f> getFinalPoints(Mat src, vector<Point2f> start_points);
+
+vector<Point2f> start_points;
+
 int main(int argc, char *argv[])
 {
-	//open the video file for reading
-	VideoCapture cap("./input_files/nfs.mp4");
 
-	// for(int i=0;i<100000;i++){
-	// 	for(int j=0;j<100000;j++){
-	// 		int k = 3;
-	// 	}
-	// }
+	// using namespace cv;
+	// cv::
 
-	// if not success, exit program
-	if (cap.isOpened() == false)
-	{
-		cout << "Cannot open the video file" << endl;
-		cin.get(); //wait for any key press
-		return -1;
-	}
+	Mat inp_file = imread("input_files/empty.jpg");
 
-	//Uncomment the following line if you want to start the video in the middle
-	//cap.set(CAP_PROP_POS_MSEC, 300);
+	Mat inp_file_bnw;
 
-	//get the frames rate of the video
-	double fps = cap.get(CAP_PROP_FPS);
-	double height = cap.get(CAP_PROP_FRAME_HEIGHT);
-	double width = cap.get(CAP_PROP_FRAME_WIDTH);
+	cvtColor(inp_file, inp_file_bnw, COLOR_BGR2GRAY);
 
-	cout << "Height is " << height << " Width is " << width << endl;
+	namedWindow("Original", WINDOW_FREERATIO);
+	setMouseCallback("Original", mouseCallback,0);
+	imshow("Original", inp_file_bnw);
+	waitKey(0);
+	destroyWindow("Original");
 
-	Point pt;
-	pt.x = width/36;
-	pt.y = height/12;
 
+	Mat dest = transformImage(inp_file_bnw,start_points);
 	
+	namedWindow("Transformed",WINDOW_FREERATIO);
+	imshow("Transformed",dest);
+	waitKey(0);
+	destroyWindow("Transformed");
 
-	cout << "Frames per seconds : " << fps << endl;
+	Rect crop_rect;
+	vector<Point2f> end_pts;
+	end_pts = getFinalPoints(inp_file_bnw,start_points);
+	crop_rect.x = end_pts.at(0).x;
+	crop_rect.y = end_pts.at(0).y;
 
-	String window_name = "My First Video";
+	crop_rect.width = end_pts.at(3).x - end_pts.at(0).x;
+	crop_rect.height = end_pts.at(1).y - end_pts.at(0).y;
 
-	namedWindow(window_name, WINDOW_NORMAL); //create a window
-	int mode = 1;
-	TickMeter tm;
-	tm.start();
-	while (true)
-	{
-		Mat frame;
-		bool bSuccess = cap.read(frame); // read a new frame from video
-
-		Mat new_img = Mat::zeros(frame.size(), frame.type());
-
-		double alpha = 1.4;
-		double beta = -30;
-
-		tm.stop();
-		double fps_calc = tm.getFPS();
-		tm.start();
+	printf("Here are co-ords %d %d %d %d \n",crop_rect.x,crop_rect.y,crop_rect.height,crop_rect.width);
+	Mat cropped = dest(crop_rect);
 
 
-		RNG rng;
-		Scalar color = Scalar(0,0,255);
-		fps = cap.get(CAP_PROP_FPS);
-		putText(frame,to_string(fps_calc),pt,2,2,color,3);
+	namedWindow("Cropped",WINDOW_FREERATIO);
+	imshow("Cropped",cropped);
+	waitKey(0);
+	destroyWindow("Cropped");
 
-		frame.convertTo(new_img, -1, alpha, beta);
 
-		
-		Mat bnw = Mat::zeros(frame.size(), frame.type());
-
-		cvtColor(frame, bnw, COLOR_BGR2GRAY);
-		
-
-		//Breaking the while loop at the end of the video
-		if (bSuccess == false)
-		{
-			cout << "Found the end of the video" << endl;
-			break;
-		}
-
-		//show the frame in the created window
-		if(mode == 0){
-			imshow(window_name, bnw);
-		}else{
-			imshow(window_name,new_img);
-		}
-
-		//wait for for 10 ms until any key is pressed.
-		//If the 'Esc' key is pressed, break the while loop.
-		//If the any other key is pressed, continue the loop
-		//If any key is not pressed withing 10 ms, continue the loop
-		int key = waitKey(10);
-		if (key == 27)
-		{
-			cout << "Esc key is pressed by user. Stoppig the video" << endl;
-			break;
-		}
-		if(key == 'q'){
-			mode = mode==0?1:0;
-		}
-	}
 
 	return 0;
+}
+
+void mouseCallback( int event, int x, int y, int, void* ){
+	if(event == EVENT_FLAG_LBUTTON){
+		printf("hurrah we have got a point %d , %d \n",x,y);
+		start_points.push_back(Point2f(x,y));
+	}
+
+}
+
+// Currently Destination Points are hardcoded
+vector<Point2f> getFinalPoints(Mat src, vector<Point2f> start_points)
+{
+	vector<Point2f> end_points;
+	end_points.push_back(Point2f(472, 52));
+	end_points.push_back(Point2f(472, 830));
+	end_points.push_back(Point2f(800, 830));
+	end_points.push_back(Point2f(800, 52));
+
+	return end_points;
+}
+
+Mat transformImage(Mat src, vector<Point2f> start_points){
+	return transformImage(src,start_points,getFinalPoints(src,start_points));
+}
+
+Mat transformImage(Mat src, vector<Point2f> start_points, vector<Point2f> end_points)
+{
+	Mat homo = findHomography(start_points,end_points);
+
+	Mat final_img;
+	warpPerspective(src,final_img,homo,src.size());
+
+	return final_img;
 }
