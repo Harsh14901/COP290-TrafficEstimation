@@ -3,6 +3,7 @@
 
 #include <img_transform.hpp>
 #include <util.hpp>
+#include <img_processor.hpp>
 
 using namespace cv;
 using namespace std;
@@ -30,11 +31,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	Mat transformed_image, cropped_img;
-	transform_image(input_file_bnw, transformed_image, start_points);
+	Mat intermediate_img,transformed_image, cropped_img;
+	transform_image(input_file_bnw, intermediate_img, start_points);
+	remove_black_borders(intermediate_img,transformed_image);
+	
 	display_window(transformed_window, transformed_image);
 
-	crop_end_pts(transformed_image, cropped_img);
+	crop_end_pts(intermediate_img, cropped_img);
 	display_window(cropped_window, cropped_img);
 
 	return 0;
