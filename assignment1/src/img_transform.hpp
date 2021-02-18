@@ -8,10 +8,12 @@
 using namespace cv;
 using namespace std;
 
-vector<Point2f> get_end_points(Mat src);
-Mat transform_image(Mat src, vector<Point2f> start_points);
-Mat transform_image(Mat src, vector<Point2f> start_points,
-                   vector<Point2f> end_points);
-Mat crop_end_pts(Mat src);
+const vector<Point> get_end_points(const Mat& src);
+void transform_image(const Mat& src, Mat& dst,
+                     const vector<Point>& start_points);
+void transform_image(const Mat& src, Mat& dst,
+                     const vector<Point>& start_points,
+                     const vector<Point>& end_points);
+void crop_end_pts(const Mat& src, Mat& dst);
 
 #endif

@@ -8,15 +8,10 @@
 using namespace std;
 using namespace cv;
 
-void display_window(string name, const Mat& img,
-                    MouseCallback callback = NULL) {
-  namedWindow(name, WINDOW_NORMAL);
-  if (callback != NULL) {
-    setMouseCallback(name, callback);
-  }
-  imshow(name, img);
-  waitKey(0);
-  destroyWindow(name);
-}
+void display_window(const string& name, const Mat& img,
+                    MouseCallback callback = NULL);
+void display_polygon(const Mat& img, const InputArray& points,
+                     const Scalar& color, double alpha = 1.0,
+                     string window_name = "");
 
 #endif
