@@ -13,6 +13,7 @@ ArgParser arg_parser;
 vector<Point> start_points;
 Mat input_file, input_file_bnw, input_display;
 string input_file_name,output_file_name;
+bool auto_point;
 
 const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
 		   fill_color = Scalar(100, 100, 0);
@@ -45,12 +46,12 @@ int main(int argc, char *argv[])
 	}
 
 	Mat intermediate_img,transformed_image, cropped_img;
-	transform_image(input_file_bnw, intermediate_img, start_points);
+	transform_image(input_file_bnw, intermediate_img, start_points,auto_point);
 	remove_black_borders(intermediate_img,transformed_image);
 	
 	display_window(transformed_window, transformed_image);
 
-	crop_end_pts(intermediate_img, cropped_img);
+	crop_end_pts(transformed_image, cropped_img,start_points,auto_point);
 	display_window(cropped_window, cropped_img);
 
 	return 0;
@@ -73,6 +74,9 @@ bool handle_arguments(int argc, char *argv[]){
 	arg_parser.set_standalone_argument("auto_points","a");
 
 	bool flag = arg_parser.parse_arguments(argc,argv);
+	if(flag){
+		auto_point = arg_parser.get_bool_argument_value("auto_points");
+	}
 	return flag;
 }
 
