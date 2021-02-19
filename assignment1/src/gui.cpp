@@ -37,29 +37,66 @@ SelectionWindow::SelectionWindow(string window_name, Mat& src,
   this->alpha = alpha;
 }
 
+void SelectionWindow::show(){
+  cout<<"[#] Use left mouse to select a point and right mouse to delete the last point!!"<<endl;
+  Window::show();
+}
+
 void SelectionWindow::mouse_callback(int event, int x, int y, int flags,
                                      void* userData) {
   auto window = (SelectionWindow*)userData;
   if (event == EVENT_LBUTTONDOWN) {
+    if(window->start_points.size() == 4){
+      return;
+    }
     printf("[+] Point selected: %d , %d \n", x, y);
     auto pt = Point(x, y);
+    
     window->start_points.push_back(pt);
-
-    circle(window->display, pt, 5, window->colors[0], -1);
-
-    if (window->start_points.size() > 1) {
-      const int n = window->start_points.size();
-      line(window->display, window->start_points[n - 1],
-           window->start_points[n - 2], window->colors[1]);
+    window->add_point(pt);
+    window->display_image();
+  } else if (event == EVENT_RBUTTONDOWN) {
+    cout << "[-] Removing last point" << endl;
+    if (!window->start_points.empty()) {
+      window->start_points.pop_back();
+      window->render_display();
+      window->display_image();
     }
+  }
+}
 
-    if (window->start_points.size() == 4) {
-      line(window->display, window->start_points[3], window->start_points[0],
-           window->colors[1]);
-      window->display_polygon();
-    } else {
-      imshow(window->window_name, window->display);
-    }
+void SelectionWindow::add_point(Point& pt) {
+  
+
+  circle(this->display, pt, 5, this->colors[0], -1);
+
+  if (this->start_points.size() > 1) {
+    const int n = this->start_points.size();
+    line(this->display, this->start_points[n - 1], this->start_points[n - 2],
+         this->colors[1]);
+  }
+
+  if (this->start_points.size() == 4) {
+    line(this->display, this->start_points[3], this->start_points[0],
+         this->colors[1]);
+  }
+}
+
+void SelectionWindow::display_image() {
+  if (this->start_points.size() == 4) {
+    this->display_polygon();
+  } else {
+    imshow(this->window_name, this->display);
+  }
+}
+void SelectionWindow::render_display() {
+  this->display = this->src.clone();
+  vector<Point> temp(this->start_points);
+  this->start_points.clear();
+
+  for (auto& pt : temp) {
+    this->start_points.push_back(pt);
+    this->add_point(pt);
   }
 }
 

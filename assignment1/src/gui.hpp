@@ -17,7 +17,7 @@ class Window {
   Mat& src;
 
   Window(string window_name, Mat& src);
-  void show();
+  virtual void show();
   void set_mouse_callback(const MouseCallback& callback, void* userData = 0);
 };
 
@@ -26,6 +26,9 @@ class SelectionWindow : public Window {
   static void mouse_callback(int event, int x, int y, int flags,
                              void* userData);
   void display_polygon();
+  void add_point(Point& pt);
+  void render_display();
+  void display_image();
 
  public:
   vector<Point> start_points;
@@ -40,6 +43,8 @@ class SelectionWindow : public Window {
   SelectionWindow(string window_name, Mat& src, vector<Scalar> colors);
   SelectionWindow(string window_name, Mat& src, vector<Scalar> colors,
                   double aplha);
+
+  void show() override;
 };
 
 #endif
