@@ -12,6 +12,8 @@ using namespace std;
 ArgParser arg_parser;
 vector<Point> start_points;
 Mat input_file, input_file_bnw, input_display;
+string input_file_name,output_file_name;
+
 const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
 		   fill_color = Scalar(100, 100, 0);
 
@@ -66,8 +68,10 @@ void show_usage(string name)
 }
 
 bool handle_arguments(int argc, char *argv[]){
-	arg_parser.set_argument("input");
-	arg_parser.set_argument("output");
+	arg_parser.set_argument("input","i","input_files/empty.jpg");
+	arg_parser.set_argument("output","o","output_files/empty_out.jpg");
+	arg_parser.set_standalone_argument("auto_points","a");
+
 	bool flag = arg_parser.parse_arguments(argc,argv);
 	return flag;
 }
@@ -75,9 +79,6 @@ bool handle_arguments(int argc, char *argv[]){
 void initialize_images()
 {
 	string file_name = arg_parser.get_argument_value("input");
-	if(file_name==""){
-		file_name = "input_files/empty.jpg";
-	}
 	cout << "Loading File: " << file_name << endl;
 
 	input_file = imread(file_name, IMREAD_COLOR);
