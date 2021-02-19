@@ -1,5 +1,6 @@
 
 #include <img_transform.hpp>
+#include <arg_parser.hpp>
 
 using namespace std;
 using namespace cv;
@@ -11,8 +12,9 @@ const Point get_centeroid(const vector<Point> &points)
 	return Point(x, y);
 }
 
-const vector<Point> get_end_points(const Mat &src, const vector<Point> &start_points, bool auto_points)
+const vector<Point> get_end_points(const Mat &src, const vector<Point> &start_points)
 {
+	bool auto_points = arg_parser.get_bool_argument_value("auto_points");
 	if (auto_points)
 	{
 		const Point centroid = get_centeroid(start_points);
@@ -51,9 +53,9 @@ const vector<Point> get_end_points(const Mat &src, const vector<Point> &start_po
 }
 
 void transform_image(const Mat &src, Mat &dst,
-					 const vector<Point> &start_points,bool auto_points)
+					 const vector<Point> &start_points)
 {
-	transform_image(src, dst, start_points, get_end_points(src, start_points, auto_points));
+	transform_image(src, dst, start_points, get_end_points(src, start_points));
 }
 
 void transform_image(const Mat &src, Mat &dst,
@@ -71,9 +73,9 @@ void transform_image(const Mat &src, Mat &dst,
 
 }
 
-void crop_end_pts(const Mat &src, Mat &dst, vector<Point> &start_points,bool auto_points)
+void crop_end_pts(const Mat &src, Mat &dst, vector<Point> &start_points)
 {
-	auto end_pts = get_end_points(src, start_points, auto_points);
+	auto end_pts = get_end_points(src, start_points);
 
 	int x_min = min(end_pts[0].x, end_pts[1].x);
 	int y_min = min(end_pts[0].y, end_pts[3].y);

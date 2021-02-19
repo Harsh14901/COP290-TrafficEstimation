@@ -37,5 +37,6 @@ public:
 
     bool parse_arguments(int argc, char *argv[]);
 };
+extern ArgParser arg_parser;
 
 #endif
