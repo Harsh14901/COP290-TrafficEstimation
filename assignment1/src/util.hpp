@@ -4,14 +4,12 @@
 #include <bits/stdc++.h>
 
 #include <opencv2/opencv.hpp>
+#include <sys/stat.h>
+
 
 using namespace std;
 using namespace cv;
 
-void display_window(const string& name, const Mat& img,
-                    MouseCallback callback = NULL);
-void display_polygon(const Mat& img, const InputArray& points,
-                     const Scalar& color, double alpha = 1.0,
-                     string window_name = "");
-
+string get_image_name(string window_name, string output_dir);
+void validate_directory(string output_dir);
 #endif

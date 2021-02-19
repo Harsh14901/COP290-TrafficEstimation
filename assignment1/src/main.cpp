@@ -3,9 +3,9 @@
 
 #include <img_transform.hpp>
 #include <util.hpp>
+#include <gui.hpp>
 #include <img_processor.hpp>
-#include <ArgParser.hpp>
-
+#include <arg_parser.hpp>
 using namespace cv;
 using namespace std;
 
@@ -27,6 +27,7 @@ void initialize_images();
 void mouse_callback(int event, int x, int y, int, void *);
 void show_usage(string name);
 bool handle_arguments(int argc, char *argv[]);
+void save_images(Mat& transformed_img, Mat& cropped_img);
 
 int main(int argc, char *argv[])
 {
@@ -38,21 +39,26 @@ int main(int argc, char *argv[])
 
 	initialize_images();
 
-	display_window(original_window, input_display, mouse_callback);
+	auto selection_window = Window(original_window, input_display);
+	selection_window.set_mouse_callback(mouse_callback);
+	selection_window.show();
+
 	if (start_points.size() != 4)
 	{
 		cout << "[-] User did not select 4 points, Exiting." << endl;
 		return -1;
 	}
 
-	Mat intermediate_img,transformed_image, cropped_img;
+	Mat intermediate_img,transformed_img, cropped_img;
 	transform_image(input_file_bnw, intermediate_img, start_points,auto_point);
-	remove_black_borders(intermediate_img,transformed_image);
+	remove_black_borders(intermediate_img,transformed_img);
 	
-	display_window(transformed_window, transformed_image);
+	Window(transformed_window, transformed_img).show();
 
-	crop_end_pts(transformed_image, cropped_img,start_points,auto_point);
-	display_window(cropped_window, cropped_img);
+	crop_end_pts(transformed_img, cropped_img,start_points,auto_point);
+	Window(cropped_window, cropped_img).show();
+	
+	save_images(transformed_img, cropped_img);
 
 	return 0;
 }
@@ -61,16 +67,16 @@ void show_usage(string name)
 {
     std::cerr << "Usage: " << name << "\n"
               << "Options:\n"
-              << "\t-h,--help\t\tShow this help message\n"
-              << "\t-i,--input\t\tSpecify the input file path (required)\n"
-			  << "\t-o,--output\t\tSpecify the output file path. Default is based on input file\n"
-			  << "\t-a,--auto_points \tSelect second set of points automatically\n"
+              << "\t-h, --help\t\tShow this help message\n"
+              << "\t-i, --input\t\tSpecify the input file path. Default is ./input_files/empty.jpg\n"
+			  << "\t-o, --output\t\tSpecify the output directory path. Default is ./output_files\n"
+			  << "\t-a, --auto_points \tSelect second set of points automatically\n"
               << std::endl;
 }
 
 bool handle_arguments(int argc, char *argv[]){
 	arg_parser.set_argument("input","i","input_files/empty.jpg");
-	arg_parser.set_argument("output","o","output_files/empty_out.jpg");
+	arg_parser.set_argument("output","o","output_files/");
 	arg_parser.set_standalone_argument("auto_points","a");
 
 	bool flag = arg_parser.parse_arguments(argc,argv);
@@ -83,7 +89,7 @@ bool handle_arguments(int argc, char *argv[]){
 void initialize_images()
 {
 	string file_name = arg_parser.get_argument_value("input");
-	cout << "Loading File: " << file_name << endl;
+	cout << "[+] Loading File: " << file_name << endl;
 
 	input_file = imread(file_name, IMREAD_COLOR);
 	cvtColor(input_file, input_file_bnw, COLOR_BGR2GRAY);
@@ -116,5 +122,28 @@ void mouse_callback(int event, int x, int y, int, void *)
 		{
 			imshow(original_window, input_display);
 		}
+	}
+}
+
+void save_images(Mat& transformed_img, Mat& cropped_img){
+	auto output_dir = arg_parser.get_argument_value("output");
+
+	auto transformed_img_name = get_image_name(transformed_window, output_dir);
+	auto cropped_img_name = get_image_name(cropped_window, output_dir);
+
+	try
+	{
+		validate_directory(output_dir);
+
+		imwrite(transformed_img_name, transformed_img);
+		cout<< "[+] Transformed image saved to: "<<transformed_img_name<<endl;
+
+		imwrite(cropped_img_name, cropped_img);
+		cout<< "[+] Cropped image saved to: "<<cropped_img_name<<endl;
+	}
+	catch(const std::exception& e)
+	{
+		cerr << "[-] Unable to save images"<<endl;
+		std::cerr << e.what() << '\n';
 	}
 }
