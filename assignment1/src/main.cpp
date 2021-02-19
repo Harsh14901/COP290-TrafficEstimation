@@ -4,10 +4,12 @@
 #include <img_transform.hpp>
 #include <util.hpp>
 #include <img_processor.hpp>
+#include <ArgParser.hpp>
 
 using namespace cv;
 using namespace std;
 
+ArgParser arg_parser;
 vector<Point> start_points;
 Mat input_file, input_file_bnw, input_display;
 const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
@@ -17,11 +19,20 @@ const auto fill_alpha = 0.4;
 const auto original_window = "original", transformed_window = "transformed",
 		   cropped_window = "cropped";
 
+
 void initialize_images();
 void mouse_callback(int event, int x, int y, int, void *);
+void show_usage(string name);
+bool handle_arguments(int argc, char *argv[]);
 
 int main(int argc, char *argv[])
 {
+
+	if(!handle_arguments(argc,argv)){
+		show_usage(argv[0]);
+		return -1;
+	}
+
 	initialize_images();
 
 	display_window(original_window, input_display, mouse_callback);
@@ -43,9 +54,33 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+void show_usage(string name)
+{
+    std::cerr << "Usage: " << name << "\n"
+              << "Options:\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\t-i,--input\t\tSpecify the input file path (required)\n"
+			  << "\t-o,--output\t\tSpecify the output file path. Default is based on input file\n"
+			  << "\t-a,--auto_points \tSelect second set of points automatically\n"
+              << std::endl;
+}
+
+bool handle_arguments(int argc, char *argv[]){
+	arg_parser.set_argument("input");
+	arg_parser.set_argument("output");
+	bool flag = arg_parser.parse_arguments(argc,argv);
+	return flag;
+}
+
 void initialize_images()
 {
-	input_file = imread("input_files/empty.jpg", IMREAD_COLOR);
+	string file_name = arg_parser.get_argument_value("input");
+	if(file_name==""){
+		file_name = "input_files/empty.jpg";
+	}
+	cout << "Loading File: " << file_name << endl;
+
+	input_file = imread(file_name, IMREAD_COLOR);
 	cvtColor(input_file, input_file_bnw, COLOR_BGR2GRAY);
 	cvtColor(input_file, input_display, COLOR_BGR2BGRA);
 }
