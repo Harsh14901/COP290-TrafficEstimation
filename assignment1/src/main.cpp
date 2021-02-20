@@ -43,15 +43,6 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-//   Mat intermediate_img, transformed_img, cropped_img;
-//   transform_image(input_file_bnw, intermediate_img,
-//                   selection_window.start_points);
-//   remove_black_borders(intermediate_img, transformed_img);
-
-//   Window(transformed_name, transformed_img).show();
-
-
-
 	Mat intermediate_img, transformed_img, cropped_img;
 	vector<Point> processed_start_points = get_points_in_order(selection_window.start_points);
 	transform_image(input_file_bnw, intermediate_img, processed_start_points);
@@ -104,36 +95,7 @@ void initialize_images() {
   cvtColor(input_file, input_display, COLOR_BGR2BGRA);
 }
 
-// void mouse_callback(int event, int x, int y, int, void *)
-// {
-// 	if (event == EVENT_LBUTTONDOWN)
-// 	{
-// 		printf("[+] Point selected: %d , %d \n", x, y);
-// 		auto pt = Point(x, y);
-// 		start_points.push_back(pt);
 
-// 		circle(input_display, pt, 8, dot_color, -1);
-		
-		
-
-// 		if (start_points.size() > 1)
-// 		{
-// 			const int n = start_points.size();
-// 			line(input_display, start_points[n - 1], start_points[n - 2], line_color,3);
-// 		}
-
-// 		if (start_points.size() == 4)
-// 		{
-// 			line(input_display, start_points[3], start_points[0], line_color,3);
-// 			display_polygon(input_display, start_points, fill_color, fill_alpha,
-// 							original_window);
-// 		}
-// 		else
-// 		{
-// 			imshow(original_window, input_display);
-// 		}
-// 	}
-// }
 
 
 void save_images(Mat& transformed_img, Mat& cropped_img) {

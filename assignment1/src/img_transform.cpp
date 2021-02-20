@@ -24,9 +24,6 @@ vector<Point> get_points_in_order(vector<Point> src_pts){
 		for(int j=i;j<3;j++){
 			if(x_sorted[j].x>x_sorted[j+1].x){
 				swap_points(x_sorted[j+1],x_sorted[j]);
-				// auto temp = Point(x_sorted[j+1].x,x_sorted[j+1].y);
-				// x_sorted[j+1] = Point(x_sorted[j].x,x_sorted[j].y);
-				// x_sorted[j] = temp;
 			}
 		}
 	}
@@ -38,21 +35,6 @@ vector<Point> get_points_in_order(vector<Point> src_pts){
 		swap_points(x_sorted[2],x_sorted[3]);
 	}
 
-	// double min = src_pts[0].x+src_pts[0].y;
-	// int min_idx = 0;
-
-	// for(int i=1;i<4;i++){
-	// 	double val = src_pts[i].x+src_pts[i].y;
-	// 	if(val<min){
-	// 		min_idx = i;
-	// 		min = val;
-	// 	}
-	// }
-
-	// vector<Point> final_points;
-	// for(int i=0;i<4;i++){
-	// 	final_points.push_back(Point(src_pts[(i+min_idx) % 4].x,src_pts[(i+min_idx) % 4].y));
-	// }
 	return x_sorted;
 }
 
