@@ -4,6 +4,57 @@
 using namespace std;
 using namespace cv;
 
+
+void swap_points(Point &a,Point &b){
+	Point c = b;
+	b = a;
+	a = c;
+}
+
+// Assumes all 4 points are present
+vector<Point> get_points_in_order(vector<Point> src_pts){
+
+
+	vector<Point> x_sorted;
+	for(int i=0;i<4;i++){
+		x_sorted.push_back(src_pts[i]);
+	}
+	for(int i=0;i<3;i++){
+		for(int j=i;j<3;j++){
+			if(x_sorted[j].x>x_sorted[j+1].x){
+				swap_points(x_sorted[j+1],x_sorted[j]);
+				// auto temp = Point(x_sorted[j+1].x,x_sorted[j+1].y);
+				// x_sorted[j+1] = Point(x_sorted[j].x,x_sorted[j].y);
+				// x_sorted[j] = temp;
+			}
+		}
+	}
+
+	if(x_sorted[0].y>x_sorted[1].y){
+				swap_points(x_sorted[0],x_sorted[1]);
+	}
+	if(x_sorted[3].y>x_sorted[2].y){
+		swap_points(x_sorted[2],x_sorted[3]);
+	}
+
+	// double min = src_pts[0].x+src_pts[0].y;
+	// int min_idx = 0;
+
+	// for(int i=1;i<4;i++){
+	// 	double val = src_pts[i].x+src_pts[i].y;
+	// 	if(val<min){
+	// 		min_idx = i;
+	// 		min = val;
+	// 	}
+	// }
+
+	// vector<Point> final_points;
+	// for(int i=0;i<4;i++){
+	// 	final_points.push_back(Point(src_pts[(i+min_idx) % 4].x,src_pts[(i+min_idx) % 4].y));
+	// }
+	return x_sorted;
+}
+
 const Point get_centeroid(const vector<Point> &points)
 {
 	int x = (points[0].x + points[1].x + points[2].x + points[3].x) / 4;
