@@ -10,10 +10,7 @@
 using namespace cv;
 using namespace std;
 
-vector<Point> start_points;
 Mat input_file, input_file_bnw, input_display;
-string input_file_name, output_file_name;
-bool auto_point;
 
 const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
            fill_color = Scalar(100, 100, 0);
@@ -43,34 +40,29 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-	Mat intermediate_img, transformed_img, cropped_img;
-	vector<Point> processed_start_points = get_points_in_order(selection_window.start_points);
-	transform_image(input_file_bnw, intermediate_img, processed_start_points);
-	remove_black_borders(intermediate_img, transformed_img);
-  	Window(transformed_name, transformed_img).show();
+  Mat intermediate_img, transformed_img, cropped_img;
+  transform_image(input_file_bnw, intermediate_img,
+                  selection_window.start_points);
+  remove_black_borders(intermediate_img, transformed_img);
 
+  Window(transformed_name, transformed_img).show();
 
-	crop_end_pts(transformed_img, cropped_img, processed_start_points);
-	
-	Window(cropped_name, cropped_img).show();
+  crop_end_pts(transformed_img, cropped_img, selection_window.start_points);
+
+  Window(cropped_name, cropped_img).show();
 
   save_images(transformed_img, cropped_img);
 
   return 0;
 }
 
-bool handle_arguments(int argc, char *argv[])
-{
-	arg_parser.set_argument("input", "i", "input_files/empty.jpg");
-	arg_parser.set_argument("output", "o", "output_files/empty_out.jpg");
-	arg_parser.set_standalone_argument("auto_points", "a");
+bool handle_arguments(int argc, char* argv[]) {
+  arg_parser.set_argument("input", "i", "input_files/empty.jpg");
+  arg_parser.set_argument("output", "o", "output_files/");
+  arg_parser.set_standalone_argument("auto_points", "a");
+  arg_parser.set_standalone_argument("debug", "d");
 
-	bool flag = arg_parser.parse_arguments(argc, argv);
-	if (flag)
-	{
-		auto_point = arg_parser.get_bool_argument_value("auto_points");
-	}
-	return flag;
+  return arg_parser.parse_arguments(argc, argv);
 }
 void show_usage(string name) {
   std::cerr
@@ -82,9 +74,9 @@ void show_usage(string name) {
       << "\t-o, --output\t\tSpecify the output directory path. Default is "
          "./output_files\n"
       << "\t-a, --auto_points \tSelect second set of points automatically\n"
+      << "\t-d, --debug \t\tdisplay debug output\n"
       << std::endl;
 }
-
 
 void initialize_images() {
   string file_name = arg_parser.get_argument_value("input");
@@ -94,9 +86,6 @@ void initialize_images() {
   cvtColor(input_file, input_file_bnw, COLOR_BGR2GRAY);
   cvtColor(input_file, input_display, COLOR_BGR2BGRA);
 }
-
-
-
 
 void save_images(Mat& transformed_img, Mat& cropped_img) {
   auto output_dir = arg_parser.get_argument_value("output");
