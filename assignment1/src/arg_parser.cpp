@@ -1,6 +1,6 @@
-#include <ArgParser.hpp>
+#include <arg_parser.hpp>
 
-// using namespace ArgParser;
+ArgParser arg_parser = ArgParser();
 
 ArgParser::Argument::Argument(string field, string short_field, string default_value, bool compulsory,bool is_standalone)
 {

@@ -3,25 +3,22 @@
 using namespace std;
 using namespace cv;
 
-void display_window(const string &name, const Mat &img,
-					MouseCallback callback)
-{
-	namedWindow(name, WINDOW_NORMAL);
-	if (callback != NULL)
-	{
-		setMouseCallback(name, callback);
-	}
-	imshow(name, img);
-	waitKey(0);
-	destroyWindow(name);
+string get_image_name(string window_name, string output_dir) {
+  // auto output_dir = arg_parser.get_argument_value("output");
+  if (output_dir.substr(output_dir.size() - 1, output_dir.size()) != "/") {
+    output_dir += "/";
+  }
+  return output_dir + window_name + ".jpg";
 }
 
-void display_polygon(const Mat &img, const InputArray &points,
-					 const Scalar &color, double alpha, string window_name)
-{
-	auto overlay = img.clone();
-	Mat final_image;
-	fillConvexPoly(overlay, points, color);
-	addWeighted(overlay, alpha, img, 1 - alpha, 0, final_image);
-	imshow(window_name, final_image);
+void validate_directory(string output_dir) {
+  struct stat info;
+  char *dirpath = &output_dir[0];
+  if (stat(dirpath, &info) != 0) {
+    if (!mkdir(dirpath, 0755)) {
+      throw runtime_error("Unable to create a directory: " + output_dir);
+    }
+  } else if (!(info.st_mode & S_IFDIR)) {
+    throw runtime_error("Not a directory: " + output_dir);
+  }
 }
