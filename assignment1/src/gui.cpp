@@ -103,7 +103,7 @@ void SelectionWindow::render_display() {
 void SelectionWindow::display_polygon() {
   auto overlay = this->display.clone();
   Mat final_image;
-  fillConvexPoly(overlay, this->start_points, this->colors[2]);
+  fillConvexPoly(overlay, get_points_in_order(this->start_points), this->colors[2]);
   addWeighted(overlay, this->alpha, this->display, 1 - this->alpha, 0,
               final_image);
   imshow(this->window_name, final_image);
