@@ -16,7 +16,11 @@ void Window::set_mouse_callback(const MouseCallback& callback, void* userData) {
 
 void Window::show() {
   imshow(this->window_name, this->display);
-  waitKey(0);
+  while(true){
+    if(waitKey(0)=='n'){
+      break;
+    }
+  }
   destroyWindow(this->window_name);
 }
 
