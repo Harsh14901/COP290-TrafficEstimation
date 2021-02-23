@@ -24,7 +24,6 @@ clean:
 	$(RM) $(BIN)/$(EXECUTABLE)
 
 run: all
-	./$(BIN)/$(EXECUTABLE)
-
+	./$(BIN)/$(EXECUTABLE) $(args)
 $(BIN)/$(EXECUTABLE): $(SRC)/*.cpp
 	$(CC) $(C_FLAGS) -I$(INCLUDE) -I ./src/ -L$(LIB) $^ -o $@ $(LIBS)
