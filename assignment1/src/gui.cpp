@@ -16,8 +16,8 @@ void Window::set_mouse_callback(const MouseCallback& callback, void* userData) {
 
 void Window::show() {
   imshow(this->window_name, this->display);
-  while(true){
-    if(waitKey(0)=='n'){
+  while (true) {
+    if (waitKey(0) == 'n') {
       break;
     }
   }
@@ -43,10 +43,11 @@ SelectionWindow::SelectionWindow(string window_name, Mat& src,
 }
 
 void SelectionWindow::show() {
-  cout << "[#] Use left mouse to select a point and right mouse to delete the "
-          "last point!!\n"
-       << "[#] Also don't worry too much about the order of points, we have got "
-          "your back!!\n";
+  cout
+      << "[#] Use left mouse to select a point and right mouse to delete the "
+         "last point!!\n"
+      << "[#] Also don't worry too much about the order of points, we have got "
+         "your back!!\n";
   Window::show();
 }
 
@@ -91,7 +92,7 @@ void SelectionWindow::make_ccw_points() {
   sort(this->start_points.begin(), this->start_points.end(), x_sort);
   sort(this->start_points.begin(), this->start_points.begin() + 2, y_sort);
   sort(this->start_points.begin() + 2, this->start_points.end(), y_rev_sort);
-  
+
   if (arg_parser.get_bool_argument_value("debug")) {
     debug();
   }
@@ -150,25 +151,30 @@ void SelectionWindow::display_polygon() {
   imshow(this->window_name, final_image);
 }
 
-AnimatedWindow::AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points) : Window(window_name, src), start_points(start_points){
+AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
+                               vector<Point>& start_points)
+    : Window(window_name, src), start_points(start_points) {
   ;
 }
-AnimatedWindow::AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points, int max_steps, int delay) : Window(window_name, src), start_points(start_points), max_steps(max_steps), interval(delay){
+AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
+                               vector<Point>& start_points, int max_steps,
+                               int delay)
+    : Window(window_name, src),
+      start_points(start_points),
+      max_steps(max_steps),
+      interval(delay) {
   ;
 }
 
-void AnimatedWindow::show(){
-  for (int i = 0; i < this->max_steps; i++)
-  {
-    transform_image(this->src, this->intermediate_img,
-                    this->start_points,float(i)/float(this->max_steps));
+void AnimatedWindow::show() {
+  for (int i = 0; i < this->max_steps; i++) {
+    transform_image(this->src, this->intermediate_img, this->start_points,
+                    float(i) / float(this->max_steps));
     remove_black_borders(this->intermediate_img, this->display);
-    imshow(this->window_name,this->display);
+    imshow(this->window_name, this->display);
     waitKey(this->interval);
   }
   Window::show();
 }
 
-void AnimatedWindow::get_display(Mat& dst){
-  dst = this->display.clone();
-}
+void AnimatedWindow::get_display(Mat& dst) { dst = this->display.clone(); }

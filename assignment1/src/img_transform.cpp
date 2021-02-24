@@ -11,12 +11,14 @@ const Point get_centroid(const vector<Point> &points) {
   return Point(x, y);
 }
 
-Point get_division(float ratio,Point p1,Point p2){
-  return Point(int(p1.x*ratio + (1-ratio)*p2.x),int(p1.y*ratio + (1-ratio)*p2.y));
+Point get_division(float ratio, Point p1, Point p2) {
+  return Point(int(p1.x * ratio + (1 - ratio) * p2.x),
+               int(p1.y * ratio + (1 - ratio) * p2.y));
 }
 
 const vector<Point> get_end_points(const Mat &src,
-                                   const vector<Point> &start_points,float ratio) {
+                                   const vector<Point> &start_points,
+                                   float ratio) {
   bool auto_points = arg_parser.get_bool_argument_value("autoselect-points");
   if (auto_points) {
     const Point centroid = get_centroid(start_points);
@@ -39,30 +41,38 @@ const vector<Point> get_end_points(const Mat &src,
     double rat = 1.2;
     max_height /= rat;
     min_width /= rat;
-    
+
     vector<Point> end_points{
-        get_division(ratio,Point(int(x - min_width / 2), int(y - max_height / 2)),start_points[0]),
-        get_division(ratio,Point(int(x - min_width / 2), int(y + max_height / 2)),start_points[1]),
-        get_division(ratio,Point(int(x + min_width / 2), int(y + max_height / 2)),start_points[2]),
-        get_division(ratio,Point(int(x + min_width / 2), int(y - max_height / 2)),start_points[3]),
+        get_division(ratio,
+                     Point(int(x - min_width / 2), int(y - max_height / 2)),
+                     start_points[0]),
+        get_division(ratio,
+                     Point(int(x - min_width / 2), int(y + max_height / 2)),
+                     start_points[1]),
+        get_division(ratio,
+                     Point(int(x + min_width / 2), int(y + max_height / 2)),
+                     start_points[2]),
+        get_division(ratio,
+                     Point(int(x + min_width / 2), int(y - max_height / 2)),
+                     start_points[3]),
     };
 
-    
     return end_points;
   }
 
   const vector<Point> end_points{
-      get_division(ratio,Point(472, 52),start_points[0]),
-      get_division(ratio,Point(472, 830),start_points[1]),
-      get_division(ratio,Point(800, 830),start_points[2]),
-      get_division(ratio,Point(800, 52),start_points[3]),
+      get_division(ratio, Point(472, 52), start_points[0]),
+      get_division(ratio, Point(472, 830), start_points[1]),
+      get_division(ratio, Point(800, 830), start_points[2]),
+      get_division(ratio, Point(800, 52), start_points[3]),
   };
   return end_points;
 }
 
 void transform_image(const Mat &src, Mat &dst,
-                     const vector<Point> &start_points,float ratio) {
-  transform_image(src, dst, start_points, get_end_points(src, start_points,ratio));
+                     const vector<Point> &start_points, float ratio) {
+  transform_image(src, dst, start_points,
+                  get_end_points(src, start_points, ratio));
 }
 
 void transform_image(const Mat &src, Mat &dst,

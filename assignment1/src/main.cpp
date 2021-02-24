@@ -42,7 +42,8 @@ int main(int argc, char* argv[]) {
 
   Mat intermediate_img, transformed_img, cropped_img;
 
-  auto animated_window = AnimatedWindow(transformed_name, input_file_bnw, selection_window.start_points);  
+  auto animated_window = AnimatedWindow(transformed_name, input_file_bnw,
+                                        selection_window.start_points);
   animated_window.show();
   animated_window.get_display(transformed_img);
 
@@ -60,7 +61,7 @@ bool handle_arguments(int argc, char* argv[]) {
   arg_parser.set_argument("output", "o", "output_files/");
   arg_parser.set_standalone_argument("autoselect-points", "a");
   arg_parser.set_standalone_argument("debug", "d");
-  arg_parser.set_standalone_argument("no-animation","f");
+  arg_parser.set_standalone_argument("no-animation", "f");
 
   return arg_parser.parse_arguments(argc, argv);
 }
@@ -73,7 +74,8 @@ void show_usage(string name) {
          "./input_files/empty.jpg\n"
       << "\t-o, --output\t\tSpecify the output directory path. Default is "
          "./output_files\n"
-      << "\t-a, --autoselect-points \tSelect second set of points automatically\n"
+      << "\t-a, --autoselect-points \tSelect second set of points "
+         "automatically\n"
       << "\t-d, --debug \t\tDisplay debug output\n"
       << "\t-f, --no-animation \t\tDo not display animation\n"
       << std::endl;
