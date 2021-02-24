@@ -41,22 +41,10 @@ int main(int argc, char* argv[]) {
   }
 
   Mat intermediate_img, transformed_img, cropped_img;
-  namedWindow("animation",WINDOW_GUI_NORMAL);
-  double max_steps = 120.0;
-  if(arg_parser.get_bool_argument_value("animation_off")){
-    max_steps = 1.0;
-  }
-  for(int i=1;i<=max_steps;i++){
-    transform_image(input_file_bnw, intermediate_img,
-                    selection_window.start_points,true,i/max_steps);
-    remove_black_borders(intermediate_img, transformed_img);
-    imshow("animation",transformed_img);
-    waitKey(5);
-  }
-  remove_black_borders(intermediate_img, transformed_img);
 
-
-  Window("animation", transformed_img).show();
+  auto animated_window = AnimatedWindow(transformed_name, input_file_bnw, selection_window.start_points);  
+  animated_window.show();
+  animated_window.get_display(transformed_img);
 
   crop_end_pts(transformed_img, cropped_img, selection_window.start_points);
 
@@ -70,9 +58,9 @@ int main(int argc, char* argv[]) {
 bool handle_arguments(int argc, char* argv[]) {
   arg_parser.set_argument("input", "i", "input_files/empty.jpg");
   arg_parser.set_argument("output", "o", "output_files/");
-  arg_parser.set_standalone_argument("auto_points", "a");
+  arg_parser.set_standalone_argument("autoselect-points", "a");
   arg_parser.set_standalone_argument("debug", "d");
-  arg_parser.set_standalone_argument("animation_off","f");
+  arg_parser.set_standalone_argument("no-animation","f");
 
   return arg_parser.parse_arguments(argc, argv);
 }
@@ -85,9 +73,9 @@ void show_usage(string name) {
          "./input_files/empty.jpg\n"
       << "\t-o, --output\t\tSpecify the output directory path. Default is "
          "./output_files\n"
-      << "\t-a, --auto_points \tSelect second set of points automatically\n"
-      << "\t-d, --debug \t\tdisplay debug output\n"
-      << "\t-f, --animation_off \t\tdisplay debug output\n"
+      << "\t-a, --autoselect-points \tSelect second set of points automatically\n"
+      << "\t-d, --debug \t\tDisplay debug output\n"
+      << "\t-f, --no-animation \t\tDo not display animation\n"
       << std::endl;
 }
 

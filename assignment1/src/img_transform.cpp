@@ -16,11 +16,8 @@ Point get_division(float ratio,Point p1,Point p2){
 }
 
 const vector<Point> get_end_points(const Mat &src,
-                                   const vector<Point> &start_points,bool animate,float ratio) {
-  bool auto_points = arg_parser.get_bool_argument_value("auto_points");
-  if(!animate){
-    ratio = 1.0;
-  }
+                                   const vector<Point> &start_points,float ratio) {
+  bool auto_points = arg_parser.get_bool_argument_value("autoselect-points");
   if (auto_points) {
     const Point centroid = get_centroid(start_points);
 
@@ -42,9 +39,6 @@ const vector<Point> get_end_points(const Mat &src,
     double rat = 1.2;
     max_height /= rat;
     min_width /= rat;
-
-
-
     
     vector<Point> end_points{
         get_division(ratio,Point(int(x - min_width / 2), int(y - max_height / 2)),start_points[0]),
@@ -67,8 +61,8 @@ const vector<Point> get_end_points(const Mat &src,
 }
 
 void transform_image(const Mat &src, Mat &dst,
-                     const vector<Point> &start_points,bool animate,float ratio) {
-  transform_image(src, dst, start_points, get_end_points(src, start_points,animate,ratio));
+                     const vector<Point> &start_points,float ratio) {
+  transform_image(src, dst, start_points, get_end_points(src, start_points,ratio));
 }
 
 void transform_image(const Mat &src, Mat &dst,
@@ -88,7 +82,7 @@ void transform_image(const Mat &src, Mat &dst,
 }
 
 void crop_end_pts(const Mat &src, Mat &dst, vector<Point> &start_points) {
-  auto end_pts = get_end_points(src, start_points,false,1.0);
+  auto end_pts = get_end_points(src, start_points);
 
   int x_min = min(end_pts[0].x, end_pts[1].x);
   int y_min = min(end_pts[0].y, end_pts[3].y);

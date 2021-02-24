@@ -80,11 +80,9 @@ void SelectionWindow::mouse_callback(int event, int x, int y, int flags,
 void SelectionWindow::make_ccw_points() {
   assert(this->start_points.size() == 4);
   auto debug = [&]() {
-    if (arg_parser.get_bool_argument_value("debug")) {
-      cout << "[#] Counter clockwise points" << endl;
-      for (auto& pt : this->start_points) {
-        cout << "[#] x: " << pt.x << ", y: " << pt.y << endl;
-      }
+    cout << "[#] Counter clockwise points" << endl;
+    for (auto& pt : this->start_points) {
+      cout << "[#] x: " << pt.x << ", y: " << pt.y << endl;
     }
   };
   auto x_sort = [](Point& a, Point& b) { return a.x < b.x; };
@@ -93,8 +91,10 @@ void SelectionWindow::make_ccw_points() {
   sort(this->start_points.begin(), this->start_points.end(), x_sort);
   sort(this->start_points.begin(), this->start_points.begin() + 2, y_sort);
   sort(this->start_points.begin() + 2, this->start_points.end(), y_rev_sort);
-
-  debug();
+  
+  if (arg_parser.get_bool_argument_value("debug")) {
+    debug();
+  }
 }
 
 void SelectionWindow::add_point(Point& pt) {
@@ -148,4 +148,27 @@ void SelectionWindow::display_polygon() {
   addWeighted(overlay, this->alpha, this->display, 1 - this->alpha, 0,
               final_image);
   imshow(this->window_name, final_image);
+}
+
+AnimatedWindow::AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points) : Window(window_name, src), start_points(start_points){
+  ;
+}
+AnimatedWindow::AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points, int max_steps, int delay) : Window(window_name, src), start_points(start_points), max_steps(max_steps), interval(delay){
+  ;
+}
+
+void AnimatedWindow::show(){
+  for (int i = 0; i < this->max_steps; i++)
+  {
+    transform_image(this->src, this->intermediate_img,
+                    this->start_points,float(i)/float(this->max_steps));
+    remove_black_borders(this->intermediate_img, this->display);
+    imshow(this->window_name,this->display);
+    waitKey(this->interval);
+  }
+  Window::show();
+}
+
+void AnimatedWindow::get_display(Mat& dst){
+  dst = this->display.clone();
 }

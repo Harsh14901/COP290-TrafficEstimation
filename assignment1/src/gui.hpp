@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 
 #include <img_transform.hpp>
+#include <img_processor.hpp>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
@@ -47,6 +48,23 @@ class SelectionWindow : public Window {
                   double aplha);
 
   void show() override;
+};
+
+class AnimatedWindow : public Window{
+  private:
+    Mat intermediate_img;
+  public:
+    vector<Point>& start_points;
+    int max_steps = 120;
+    int interval = 5;
+
+
+    AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points);
+    AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points, int max_steps, int interval);
+
+    void show() override;
+    void get_display(Mat& dst);
+
 };
 
 #endif
