@@ -42,8 +42,9 @@ int main(int argc, char* argv[]) {
 
   Mat intermediate_img, transformed_img, cropped_img;
 
-  auto animated_window = AnimatedWindow(transformed_name, input_file_bnw,
-                                        selection_window.start_points);
+  auto animated_window = AnimatedWindow(
+      transformed_name, input_file_bnw, selection_window.start_points,
+      (arg_parser.get_bool_argument_value("no-animation")) ? 1 : 120);
   animated_window.show();
   animated_window.get_display(transformed_img);
 

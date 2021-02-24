@@ -152,11 +152,6 @@ void SelectionWindow::display_polygon() {
 }
 
 AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
-                               vector<Point>& start_points)
-    : Window(window_name, src), start_points(start_points) {
-  ;
-}
-AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
                                vector<Point>& start_points, int max_steps,
                                int delay)
     : Window(window_name, src),
@@ -169,7 +164,7 @@ AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
 void AnimatedWindow::show() {
   for (int i = 0; i < this->max_steps; i++) {
     transform_image(this->src, this->intermediate_img, this->start_points,
-                    float(i) / float(this->max_steps));
+                    (float(i) + 1.0) / float(this->max_steps));
     remove_black_borders(this->intermediate_img, this->display);
     imshow(this->window_name, this->display);
     waitKey(this->interval);

@@ -56,12 +56,11 @@ class AnimatedWindow : public Window {
 
  public:
   vector<Point>& start_points;
-  int max_steps = 120;
-  int interval = 5;
+  int max_steps;
+  int interval;
 
-  AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points);
   AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points,
-                 int max_steps, int interval);
+                 int max_steps = 120, int interval = 5);
 
   void show() override;
   void get_display(Mat& dst);

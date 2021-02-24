@@ -15,7 +15,8 @@ void validate_directory(string output_dir) {
   struct stat info;
   char *dirpath = &output_dir[0];
   if (stat(dirpath, &info) != 0) {
-    if (!mkdir(dirpath, 0755)) {
+    cout<<*dirpath<<endl;
+    if (mkdir(dirpath, 0755)) {
       throw runtime_error("Unable to create a directory: " + output_dir);
     }
   } else if (!(info.st_mode & S_IFDIR)) {
