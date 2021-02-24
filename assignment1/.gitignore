@@ -1,2 +1,3 @@
 output_files/
 bin/
+*.tar.gz
