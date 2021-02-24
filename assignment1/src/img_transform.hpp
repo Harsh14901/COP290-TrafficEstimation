@@ -9,9 +9,9 @@ using namespace cv;
 using namespace std;
 
 const vector<Point> get_end_points(const Mat& src,
-                                   const vector<Point>& start_points);
+                                   const vector<Point>& start_points,bool animate,float ratio);
 void transform_image(const Mat& src, Mat& dst,
-                     const vector<Point>& start_points);
+                     const vector<Point>& start_points,bool animate,float ratio);
 void transform_image(const Mat& src, Mat& dst,
                      const vector<Point>& start_points,
                      const vector<Point>& end_points);
