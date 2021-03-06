@@ -78,13 +78,13 @@ void transform_image(const Mat &src, Mat &dst,
 void transform_image(const Mat &src, Mat &dst,
                      const vector<Point> &start_points,
                      const vector<Point> &end_points) {
-  if (arg_parser.get_bool_argument_value("debug")) {
-    cout << "[#] Taking end points as: " << endl;
-    cout << end_points[0].x << " " << end_points[0].y << endl;
-    cout << end_points[1].x << " " << end_points[1].y << endl;
-    cout << end_points[2].x << " " << end_points[2].y << endl;
-    cout << end_points[3].x << " " << end_points[3].y << endl;
-  }
+  // if (arg_parser.get_bool_argument_value("debug")) {
+  //   cout << "[#] Taking end points as: " << endl;
+  //   cout << end_points[0].x << " " << end_points[0].y << endl;
+  //   cout << end_points[1].x << " " << end_points[1].y << endl;
+  //   cout << end_points[2].x << " " << end_points[2].y << endl;
+  //   cout << end_points[3].x << " " << end_points[3].y << endl;
+  // }
 
   auto homo = findHomography(start_points, end_points);
 
