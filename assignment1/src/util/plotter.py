@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("../output_files/density.csv")
+df = pd.read_csv("../../output_files/density.csv")
 data = df.to_numpy()
 
 x = [d[0] for d in data]
@@ -14,5 +14,5 @@ plt.plot(x, y2, 'r', label="Dynamic Density")
 plt.xlabel("Time (s)")
 plt.ylabel("Density")
 plt.legend()
-plt.savefig("../output_files/plot.png")
+plt.savefig("../../output_files/plot.png")
 plt.show()

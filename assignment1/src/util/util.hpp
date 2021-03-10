@@ -4,7 +4,7 @@
 #include <bits/stdc++.h>
 #include <sys/stat.h>
 
-#include <arg_parser.hpp>
+#include <util/arg_parser.hpp>
 #include <config.hpp>
 #include <opencv2/opencv.hpp>
 

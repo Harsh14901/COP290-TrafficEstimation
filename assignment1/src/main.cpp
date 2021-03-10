@@ -6,10 +6,10 @@
 #include <img_processor.hpp>
 #include <img_transform.hpp>
 #include <opencv2/opencv.hpp>
-#include <util.hpp>
+#include <util/util.hpp>
 
-#include "arg_parser.hpp"
-#include "tqdm.h"
+#include "util/arg_parser.hpp"
+#include "util/tqdm.h"
 using namespace cv;
 using namespace std;
 

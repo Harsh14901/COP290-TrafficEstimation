@@ -21,7 +21,7 @@ clean:
 
 run: all
 	./$(BIN)/$(EXECUTABLE) $(args)
-$(BIN)/$(EXECUTABLE): $(SRC)/*.cpp
+$(BIN)/$(EXECUTABLE): $(SRC)/*.cpp ./src/util/*.cpp
 	
 	$(CC) $(C_FLAGS) -I$(INCLUDE) -I ./src/ -L$(LIB) $^ -o $@ $(LIBS)
 tar:
