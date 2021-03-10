@@ -1,3 +1,4 @@
+  
 {
     "version": "0.2.0",
     "configurations": [
@@ -26,7 +27,8 @@
             "linux": {
                 "MIMode": "gdb",
                 "miDebuggerPath": "gdb",
-                "program": "${workspaceFolder}/bin/main"
+                "program": "${workspaceFolder}/bin/main",
+                "arguments": "-d -d"
             },
             "osx": {
                 "MIMode": "lldb",

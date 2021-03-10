@@ -19,7 +19,7 @@ Point get_division(float ratio, Point p1, Point p2) {
 const vector<Point> get_end_points(const Mat &src,
                                    const vector<Point> &start_points,
                                    float ratio) {
-  bool auto_points = arg_parser.get_bool_argument_value("autoselect-points");
+  bool auto_points = arg_parser.get_bool_argument_value("autoselect-points") || arg_parser.get_bool_argument_value("skip_initial");
   if (auto_points) {
     const Point centroid = get_centroid(start_points);
 

@@ -31,4 +31,8 @@
 *.out
 *.app
 
+# Video Files
+*.mp4
+*.avi
+
 */bin/
