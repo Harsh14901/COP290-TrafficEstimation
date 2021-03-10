@@ -7,6 +7,8 @@
 #include <img_transform.hpp>
 #include <opencv2/opencv.hpp>
 
+#include <config.hpp>
+
 using namespace std;
 using namespace cv;
 
@@ -34,7 +36,7 @@ class SelectionWindow : public Window {
   void make_ccw_points();
 
  public:
-  vector<Point> start_points;
+  vector<Point> selected_points;
   /*
     colors[0] -> dot_color,
     colors[1] -> line_color,
@@ -55,15 +57,17 @@ class AnimatedWindow : public Window {
   Mat intermediate_img;
 
  public:
-  vector<Point>& start_points;
+  vector<Point>& selected_points;
   int max_steps;
   int interval;
 
-  AnimatedWindow(string window_name, Mat& src, vector<Point>& start_points,
+  AnimatedWindow(string window_name, Mat& src, vector<Point>& selected_points,
                  int max_steps = 120, int interval = 5);
 
   void show() override;
   void get_display(Mat& dst);
 };
+
+void select_start_points(const Mat& input);
 
 #endif

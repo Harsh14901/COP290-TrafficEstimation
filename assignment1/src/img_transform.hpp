@@ -3,19 +3,16 @@
 
 #include <bits/stdc++.h>
 
-#include <opencv2/opencv.hpp>
+#include <config.hpp>
+#include <arg_parser.hpp>
 
+#include <opencv2/opencv.hpp>
 using namespace cv;
 using namespace std;
 
-const vector<Point> get_end_points(const Mat& src,
-                                   const vector<Point>& start_points,
-                                   float ratio = 1.0);
-void transform_image(const Mat& src, Mat& dst,
-                     const vector<Point>& start_points, float ratio = 1.0);
-void transform_image(const Mat& src, Mat& dst,
-                     const vector<Point>& start_points,
-                     const vector<Point>& end_points);
-void crop_end_pts(const Mat& src, Mat& dst, vector<Point>& start_points);
-
+const vector<Point> get_end_points(const Mat& src, float ratio = 1.0);
+void transform_image(const Mat& src, Mat& dst, float ratio = 1.0);
+void transform_image(const Mat& src, Mat& dst, const vector<Point>& end_points);
+void crop_end_pts(const Mat& src, Mat& dst);
+void get_start_points(vector<Point>& points);
 #endif

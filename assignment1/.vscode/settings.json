@@ -1,7 +1,11 @@
 {
     "files.associations": {
+        "*.yacc": "yacc",
         "deque": "cpp",
         "string": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "iostream": "cpp",
+        "*.tcc": "cpp",
+        "bitset": "cpp"
     }
 }

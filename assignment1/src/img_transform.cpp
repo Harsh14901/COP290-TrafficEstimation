@@ -1,5 +1,4 @@
 
-#include <arg_parser.hpp>
 #include <img_transform.hpp>
 
 using namespace std;
@@ -16,10 +15,9 @@ Point get_division(float ratio, Point p1, Point p2) {
                int(p1.y * ratio + (1 - ratio) * p2.y));
 }
 
-const vector<Point> get_end_points(const Mat &src,
-                                   const vector<Point> &start_points,
-                                   float ratio) {
-  bool auto_points = arg_parser.get_bool_argument_value("autoselect-points") || arg_parser.get_bool_argument_value("skip_initial");
+const vector<Point> get_end_points(const Mat &src, float ratio) {
+  bool auto_points = arg_parser.get_bool_argument_value("autoselect-points") ||
+                     arg_parser.get_bool_argument_value("skip_initial");
   if (auto_points) {
     const Point centroid = get_centroid(start_points);
 
@@ -69,30 +67,19 @@ const vector<Point> get_end_points(const Mat &src,
   return end_points;
 }
 
-void transform_image(const Mat &src, Mat &dst,
-                     const vector<Point> &start_points, float ratio) {
-  transform_image(src, dst, start_points,
-                  get_end_points(src, start_points, ratio));
+void transform_image(const Mat &src, Mat &dst, float ratio) {
+  transform_image(src, dst, get_end_points(src, ratio));
 }
 
 void transform_image(const Mat &src, Mat &dst,
-                     const vector<Point> &start_points,
                      const vector<Point> &end_points) {
-  // if (arg_parser.get_bool_argument_value("debug")) {
-  //   cout << "[#] Taking end points as: " << endl;
-  //   cout << end_points[0].x << " " << end_points[0].y << endl;
-  //   cout << end_points[1].x << " " << end_points[1].y << endl;
-  //   cout << end_points[2].x << " " << end_points[2].y << endl;
-  //   cout << end_points[3].x << " " << end_points[3].y << endl;
-  // }
-
   auto homo = findHomography(start_points, end_points);
 
   warpPerspective(src, dst, homo, src.size());
 }
 
-void crop_end_pts(const Mat &src, Mat &dst, vector<Point> &start_points) {
-  auto end_pts = get_end_points(src, start_points);
+void crop_end_pts(const Mat &src, Mat &dst) {
+  auto end_pts = get_end_points(src);
 
   int x_min = min(end_pts[0].x, end_pts[1].x);
   int y_min = min(end_pts[0].y, end_pts[3].y);
@@ -103,3 +90,11 @@ void crop_end_pts(const Mat &src, Mat &dst, vector<Point> &start_points) {
 
   dst = src(crop_rect);
 }
+
+void get_start_points(vector<Point> &points) {
+  points.push_back(Point(972, 264));
+  points.push_back(Point(540, 1068));
+  points.push_back(Point(1530, 1074));
+  points.push_back(Point(1308, 264));
+}
+

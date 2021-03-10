@@ -55,7 +55,7 @@ void SelectionWindow::mouse_callback(int event, int x, int y, int flags,
                                      void* userData) {
   auto window = (SelectionWindow*)userData;
   if (event == EVENT_LBUTTONDOWN) {
-    if (window->start_points.size() == 4) {
+    if (window->selected_points.size() == 4) {
       return;
     }
     if (arg_parser.get_bool_argument_value("debug")) {
@@ -63,15 +63,15 @@ void SelectionWindow::mouse_callback(int event, int x, int y, int flags,
     }
     auto pt = Point(x, y);
 
-    window->start_points.push_back(pt);
+    window->selected_points.push_back(pt);
     window->add_point(pt);
     window->display_image();
   } else if (event == EVENT_RBUTTONDOWN) {
     if (arg_parser.get_bool_argument_value("debug")) {
       cout << "[-] Removing last point" << endl;
     }
-    if (!window->start_points.empty()) {
-      window->start_points.pop_back();
+    if (!window->selected_points.empty()) {
+      window->selected_points.pop_back();
       window->render_display();
       window->display_image();
     }
@@ -79,19 +79,19 @@ void SelectionWindow::mouse_callback(int event, int x, int y, int flags,
 }
 
 void SelectionWindow::make_ccw_points() {
-  assert(this->start_points.size() == 4);
+  assert(this->selected_points.size() == 4);
   auto debug = [&]() {
     cout << "[#] Counter clockwise points" << endl;
-    for (auto& pt : this->start_points) {
+    for (auto& pt : this->selected_points) {
       cout << "[#] x: " << pt.x << ", y: " << pt.y << endl;
     }
   };
   auto x_sort = [](Point& a, Point& b) { return a.x < b.x; };
   auto y_sort = [](Point& a, Point& b) { return a.y < b.y; };
   auto y_rev_sort = [](Point& a, Point& b) { return a.y > b.y; };
-  sort(this->start_points.begin(), this->start_points.end(), x_sort);
-  sort(this->start_points.begin(), this->start_points.begin() + 2, y_sort);
-  sort(this->start_points.begin() + 2, this->start_points.end(), y_rev_sort);
+  sort(this->selected_points.begin(), this->selected_points.end(), x_sort);
+  sort(this->selected_points.begin(), this->selected_points.begin() + 2, y_sort);
+  sort(this->selected_points.begin() + 2, this->selected_points.end(), y_rev_sort);
 
   if (arg_parser.get_bool_argument_value("debug")) {
     debug();
@@ -101,23 +101,23 @@ void SelectionWindow::make_ccw_points() {
 void SelectionWindow::add_point(Point& pt) {
   circle(this->display, pt, 5, this->colors[0], -1);
 
-  if (this->start_points.size() > 1) {
-    const int n = this->start_points.size();
-    line(this->display, this->start_points[n - 1], this->start_points[n - 2],
+  if (this->selected_points.size() > 1) {
+    const int n = this->selected_points.size();
+    line(this->display, this->selected_points[n - 1], this->selected_points[n - 2],
          this->colors[1]);
   }
 
-  if (this->start_points.size() == 4) {
+  if (this->selected_points.size() == 4) {
     this->display = this->src.clone();
     this->make_ccw_points();
 
-    for (unsigned int i = 0; i < this->start_points.size(); i++) {
-      circle(this->display, this->start_points[i], 5, this->colors[0], -1);
-      if (i != this->start_points.size() - 1) {
-        line(this->display, this->start_points[i], this->start_points[i + 1],
+    for (unsigned int i = 0; i < this->selected_points.size(); i++) {
+      circle(this->display, this->selected_points[i], 5, this->colors[0], -1);
+      if (i != this->selected_points.size() - 1) {
+        line(this->display, this->selected_points[i], this->selected_points[i + 1],
              this->colors[1]);
       } else {
-        line(this->display, this->start_points[3], this->start_points[0],
+        line(this->display, this->selected_points[3], this->selected_points[0],
              this->colors[1]);
       }
     }
@@ -125,7 +125,7 @@ void SelectionWindow::add_point(Point& pt) {
 }
 
 void SelectionWindow::display_image() {
-  if (this->start_points.size() == 4) {
+  if (this->selected_points.size() == 4) {
     this->display_polygon();
   } else {
     imshow(this->window_name, this->display);
@@ -133,11 +133,11 @@ void SelectionWindow::display_image() {
 }
 void SelectionWindow::render_display() {
   this->display = this->src.clone();
-  vector<Point> temp(this->start_points);
-  this->start_points.clear();
+  vector<Point> temp(this->selected_points);
+  this->selected_points.clear();
 
   for (auto& pt : temp) {
-    this->start_points.push_back(pt);
+    this->selected_points.push_back(pt);
     this->add_point(pt);
   }
 }
@@ -145,17 +145,17 @@ void SelectionWindow::render_display() {
 void SelectionWindow::display_polygon() {
   auto overlay = this->display.clone();
   Mat final_image;
-  fillConvexPoly(overlay, this->start_points, this->colors[2]);
+  fillConvexPoly(overlay, this->selected_points, this->colors[2]);
   addWeighted(overlay, this->alpha, this->display, 1 - this->alpha, 0,
               final_image);
   imshow(this->window_name, final_image);
 }
 
 AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
-                               vector<Point>& start_points, int max_steps,
+                               vector<Point>& selected_points, int max_steps,
                                int delay)
     : Window(window_name, src),
-      start_points(start_points),
+      selected_points(selected_points),
       max_steps(max_steps),
       interval(delay) {
   ;
@@ -163,7 +163,7 @@ AnimatedWindow::AnimatedWindow(string window_name, Mat& src,
 
 void AnimatedWindow::show() {
   for (int i = 0; i < this->max_steps; i++) {
-    transform_image(this->src, this->intermediate_img, this->start_points,
+    transform_image(this->src, this->intermediate_img,
                     (float(i) + 1.0) / float(this->max_steps));
     remove_black_borders(this->intermediate_img, this->display);
     imshow(this->window_name, this->display);
@@ -173,3 +173,28 @@ void AnimatedWindow::show() {
 }
 
 void AnimatedWindow::get_display(Mat& dst) { dst = this->display.clone(); }
+
+void select_start_points(const Mat& input) {
+  if (!arg_parser.get_bool_argument_value("skip_initial")) {
+    Mat input_file_bnw, input_display;
+
+    cvtColor(input, input_file_bnw, COLOR_BGR2GRAY);
+    cvtColor(input, input_display, COLOR_BGR2BGRA);
+    auto selection_window = SelectionWindow(
+        original_name, input_display, {dot_color, line_color, fill_color});
+    selection_window.show();
+
+    if (selection_window.selected_points.size() != 4) {
+      cerr << "[-] User did not select 4 points, Exiting." << endl;
+      throw "Invalid point selection";
+    }
+
+    auto steps = arg_parser.get_bool_argument_value("no-animation") ? 1 : 120;
+    auto animated_window = AnimatedWindow(transformed_name, input_file_bnw,
+                                          selection_window.selected_points, steps);
+    start_points.assign(selection_window.selected_points.begin(), selection_window.selected_points.end());
+    animated_window.show();
+  } else {
+    get_start_points(start_points);
+  }
+}
