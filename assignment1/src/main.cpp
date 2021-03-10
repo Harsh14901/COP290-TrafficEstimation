@@ -126,6 +126,9 @@ int main(int argc, char* argv[]) {
   for (int i=0; i<frame_count;i++) {
     bar.progress(i,frame_count);
     cap.read(frame);
+    // if(i%3!=0){
+    //   continue;
+    // }
     if (frame.empty()) {
       cerr << "[+] Video stream finished" << endl;
       break;
@@ -146,24 +149,6 @@ int main(int argc, char* argv[]) {
       prev = frame_gray;
     }
 
-    Mat new_opt = opticalFlow(prev,frame_gray);
-    prev = frame_gray;
-    Mat dynamic_img; 
-    if(i==0){
-      prev_opt = new_opt;
-    }
-    bitwise_and(new_opt,prev_opt,dynamic_img);
-    prev_opt = new_opt;
-
-    Mat bnw_dynamic;
-    threshold(dynamic_img*255,bnw_dynamic,15,255,THRESH_BINARY);
-    Mat processed_bnw_dynamic;
-    // morphologyEx(bnw_dynamic, processed_bnw_dynamic, MORPH_ERODE, large_kernel, Point(-1, -1),
-    //         1);
-    // morphologyEx(bnw_dynamic,processed_bnw_dynamic, MORPH_DILATE, kernel, Point(-1, -1),
-    //           2);
-
-    bnw_dynamic.copyTo(processed_bnw_dynamic);
 
 
 
@@ -188,8 +173,32 @@ int main(int argc, char* argv[]) {
 
     threshold(processed_img, fg_mask, 240, 255, THRESH_BINARY);
 
+
+    Mat new_opt = opticalFlow(prev,frame_gray);
+    prev = frame_gray;
+    Mat dynamic_img; 
+    if(i==0){
+      prev_opt = new_opt;
+    }
+    bitwise_and(new_opt,prev_opt,dynamic_img);
+    prev_opt = new_opt;
+
+    Mat bnw_dynamic;
+    threshold(dynamic_img*255,bnw_dynamic,60,255,THRESH_BINARY);
+    Mat processed_bnw_dynamic;
+    // morphologyEx(bnw_dynamic, processed_bnw_dynamic, MORPH_ERODE, large_kernel, Point(-1, -1),
+    //         1);
+    // morphologyEx(bnw_dynamic,processed_bnw_dynamic, MORPH_DILATE, kernel, Point(-1, -1),
+    //           2);
+
+    bnw_dynamic.copyTo(processed_bnw_dynamic);
+
+
+
+
     Mat rect_img;
     fg_mask.copyTo(rect_img);
+
 
     
     vector<vector<Point>> contours;
@@ -383,9 +392,14 @@ Mat opticalFlow(Mat &prvs,Mat &next){
     _hsv[0] = angle;
     _hsv[1] = Mat::ones(angle.size(), CV_32F);
     _hsv[2] = magn_norm;
-    // merge(_hsv, 3, hsv);
-    // hsv.convertTo(hsv8, CV_8U, 255.0);
-    // cvtColor(hsv8, bgr, COLOR_HSV2BGR);
     
-    return _hsv[2];
+    merge(_hsv, 3, hsv);
+
+    Mat frame_threshold;
+    inRange(hsv, Scalar(0.47, 0, 0.2), Scalar(0.57, 255, 1), frame_threshold);
+    imshow("Frame Trhreshold",frame_threshold);
+    hsv.convertTo(hsv8, CV_8U, 255.0);
+    // cvtColor(hsv8, bgr, COLOR_HSV2BGR);
+    return frame_threshold;
+    // return _hsv[2];
   }
