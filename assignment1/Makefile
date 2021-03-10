@@ -1,3 +1,5 @@
+SHELL = /bin/bash
+
 CC		= g++
 C_FLAGS = -g -Wall
 
@@ -25,4 +27,9 @@ $(BIN)/$(EXECUTABLE): $(SRC)/*.cpp ./src/util/*.cpp
 	
 	$(CC) $(C_FLAGS) -I$(INCLUDE) -I ./src/ -L$(LIB) $^ -o $@ $(LIBS)
 tar:
-	tar -zcvf 2019CS10431_2019CS50443_ass1_part1.tar.gz --directory=./ --exclude-vcs --exclude-vcs-ignores --exclude=*.tar.gz --exclude=".vscode/*" *
+	tar -zcvf 2019CS10431_2019CS50443_ass1_part2.tar.gz --directory=./ --exclude-vcs --exclude-vcs-ignores --exclude=*.tar.gz --exclude=".vscode/*" --exclude="input_files/trafficvideo.mp4" * 
+plot:
+	cd ./src/util && python3 plotter.py
+video:
+	wget https://www.cse.iitd.ac.in/~rijurekha/cop290_2021/trafficvideo.mp4 -O input_files/trafficvideo.mp4
+

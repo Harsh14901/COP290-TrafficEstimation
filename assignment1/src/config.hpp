@@ -15,6 +15,7 @@ const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
            fill_color = Scalar(100, 100, 0);
 const auto original_name = "original", transformed_name = "transformed",
            cropped_name = "cropped";
+const auto proc_speed = 3.0; 
 
 extern vector<Point> start_points;
 

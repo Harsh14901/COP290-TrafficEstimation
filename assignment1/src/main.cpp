@@ -18,14 +18,14 @@ VideoCapture cap;
 tqdm bar;
 int frame_rate, frame_count;
 cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
-Mat kernel, large_kernel, frame, first_frame, fg_mask, last_frame, prev_opt;
+Mat kernel, large_kernel, frame, first_frame, fg_mask, last_frame, prev_opt,
+    bg_img;
 
 vector<Point> start_points = vector<Point>();
 
 void show_usage(string name);
 bool handle_arguments(int argc, char *argv[]);
-bool initialize_video();
-void initialize();
+void initialize_elements();
 
 int main(int argc, char *argv[]) {
   if (!handle_arguments(argc, argv)) {
@@ -33,17 +33,15 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  if (!initialize_video()) {
-    cerr << "[-] Unable to open the video" << endl;
-    return -1;
-  }
-
-  initialize();
+  initialize_elements();
 
   cout << "[+] Training BG subtractor ..." << endl;
-  train_bgsub(bg_sub, cap, fg_mask);
-  // Mat empty_bg = imread("../input_files/empty.jpg");
-  // train_static_bgsub(bg_sub, empty_bg, fg_mask);
+  if (arg_parser.get_bool_argument_value("train")) {
+    train_bgsub(bg_sub, cap, fg_mask);
+  } else {
+    train_static_bgsub(bg_sub, bg_img, fg_mask);
+  }
+
   cap.set(CAP_PROP_POS_FRAMES, 0);
 
   for (int i = 0; i < frame_count; i++) {
@@ -55,7 +53,8 @@ int main(int argc, char *argv[]) {
       break;
     }
 
-    if (arg_parser.get_bool_argument_value("quick") && i % 3 != 0) {
+    if (arg_parser.get_bool_argument_value("quick") &&
+        i % int(proc_speed) != 0) {
       continue;
     }
 
@@ -100,7 +99,7 @@ int main(int argc, char *argv[]) {
 
   bar.finish();
   cap.release();
-  destroyAllWindows();
+  cv::destroyAllWindows();
 
   outputCSV(density, frame_rate);
 
@@ -115,6 +114,7 @@ bool handle_arguments(int argc, char *argv[]) {
   arg_parser.set_standalone_argument("no-animation", "f");
   arg_parser.set_standalone_argument("skip-initial", "s");
   arg_parser.set_standalone_argument("quick", "q");
+  arg_parser.set_standalone_argument("train", "t");
 
   return arg_parser.parse_arguments(argc, argv);
 }
@@ -132,27 +132,39 @@ void show_usage(string name) {
        << "\t-f, --no-animation \t\tDo not display animation\n"
        << "\t-s, --skip-initial \t\tSkip initial selection of points\n"
        << "\t-q, --quick \t\tOutput a quick result by skipping frames\n"
+       << "\t-t, --train-bg \t\tAuto train the background of video\n"
 
        << endl;
 }
 
-bool initialize_video() {
+void initialize_elements() {
   string file_name = arg_parser.get_argument_value("input");
   cout << "[+] Loading File: " << file_name << endl;
   cap.open(file_name);
 
-  return cap.isOpened();
-}
+  if (!cap.isOpened()) {
+    cerr << "[-] Unable to open the video" << endl;
+    throw "Could not load video";
+  }
 
-void initialize() {
   cap.read(first_frame);
   select_start_points(first_frame);
 
   frame_rate = cap.get(CAP_PROP_FPS);
   frame_count = cap.get(CAP_PROP_FRAME_COUNT);
 
-  cout << "[+] Frame rate is: " << frame_rate << endl;
-  cout << "[+] Frame count is: " << frame_count << endl;
+  if (arg_parser.get_bool_argument_value("debug")) {
+    cout << "[+] Frame rate is: " << frame_rate << endl;
+    cout << "[+] Frame count is: " << frame_count << endl;
+  }
+
+  bg_img = imread("./input_files/empty.jpg", IMREAD_UNCHANGED);
+
+  if (bg_img.empty() && !arg_parser.get_bool_argument_value("train")) {
+    cerr << "[-] Unable to load the background file ./input_files/empty.jpg"
+         << endl;
+    throw "Background Image not found";
+  }
 
   bg_sub = createBackgroundSubtractorMOG2(
       int(frame_count * training_percent / 100.0), 8.0);

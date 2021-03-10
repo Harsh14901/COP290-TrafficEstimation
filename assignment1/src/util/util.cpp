@@ -33,8 +33,12 @@ void outputCSV(vector<pair<double, double>> &density, double frame_rate) {
   } else {
     out_file << "time,queue_density,dynamic_density" << endl;
     for (uint i = 0; i < density.size(); i++) {
-      out_file << double(i + 1) / frame_rate << "," << density[i].first << ","
-               << density[i].second << endl;
+      auto time = double(i + 1) / frame_rate;
+      if (arg_parser.get_bool_argument_value("quick")) {
+        time *= proc_speed;
+      }
+      out_file << time << "," << density[i].first << "," << density[i].second
+               << endl;
     }
 
     out_file.close();

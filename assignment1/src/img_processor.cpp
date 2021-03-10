@@ -16,7 +16,7 @@ void remove_black_borders(const Mat& src, Mat& dst) {
 
 void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
                         const Mat& bg_img, Mat& fg_mask) {
-  Mat frame = bg_img;
+  Mat frame = bg_img.clone();
   preprocess_frame(frame);
 
   for (int i = 0; i < bg_sub->getHistory(); i++) {
