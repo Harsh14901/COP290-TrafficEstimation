@@ -1,6 +1,6 @@
 #include <img_processor.hpp>
 
-void remove_black_borders(const Mat &src, Mat &dst) {
+void remove_black_borders(const Mat& src, Mat& dst) {
   Mat bnw, gray;
   if (src.channels() == 3) {
     cvtColor(src, gray, COLOR_BGR2RGB);
@@ -14,7 +14,8 @@ void remove_black_borders(const Mat &src, Mat &dst) {
   dst = src(crop_rect);
 }
 
-void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2> &bg_sub, const Mat& bg_img, Mat &fg_mask) {
+void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
+                        const Mat& bg_img, Mat& fg_mask) {
   Mat frame = bg_img;
   preprocess_frame(frame);
 
@@ -23,8 +24,8 @@ void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2> &bg_sub, const Mat
   }
 }
 
-void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2> &bg_sub,
-                  VideoCapture& cap, Mat &fg_mask) {
+void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
+                 VideoCapture& cap, Mat& fg_mask) {
   Mat frame;
   for (int i = 0; i < bg_sub->getHistory(); i++) {
     cap.read(frame);
@@ -33,12 +34,12 @@ void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2> &bg_sub,
       throw "Insufficient Video Stream";
     }
     preprocess_frame(frame);
-    
+
     bg_sub->apply(frame, fg_mask, learning_rate);
   }
 }
 
-void opticalFlow(const Mat &prvs, const Mat &next, Mat& dst) {
+void opticalFlow(const Mat& prvs, const Mat& next, Mat& dst) {
   Mat flow(prvs.size(), CV_32FC2);
   calcOpticalFlowFarneback(prvs, next, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
 
@@ -67,8 +68,7 @@ void opticalFlow(const Mat &prvs, const Mat &next, Mat& dst) {
   // return _hsv[2];
 }
 
-
-void preprocess_frame(Mat& frame){
+void preprocess_frame(Mat& frame) {
   Mat temp;
   cvtColor(frame, temp, COLOR_BGR2GRAY);
 
@@ -77,44 +77,42 @@ void preprocess_frame(Mat& frame){
   crop_end_pts(temp, frame);
 }
 
-void reduce_noise(Mat& fg_mask, const Mat& kernel){
+void reduce_noise(Mat& fg_mask, const Mat& kernel) {
   Mat processed_img;
   // TODO: Change the number of iterations of the three ops below.
-    morphologyEx(fg_mask, processed_img, MORPH_CLOSE, kernel, Point(-1, -1), 4);
-    morphologyEx(processed_img, fg_mask, MORPH_OPEN, kernel, Point(-1, -1), 2);
-    morphologyEx(fg_mask, processed_img, MORPH_CLOSE, kernel, Point(-1, -1), 3);
-    morphologyEx(processed_img, fg_mask, MORPH_OPEN, kernel, Point(-1, -1), 2);
+  morphologyEx(fg_mask, processed_img, MORPH_CLOSE, kernel, Point(-1, -1), 4);
+  morphologyEx(processed_img, fg_mask, MORPH_OPEN, kernel, Point(-1, -1), 2);
+  morphologyEx(fg_mask, processed_img, MORPH_CLOSE, kernel, Point(-1, -1), 3);
+  morphologyEx(processed_img, fg_mask, MORPH_OPEN, kernel, Point(-1, -1), 2);
 
-    morphologyEx(fg_mask, processed_img, MORPH_DILATE, kernel, Point(-1, -1),
-                 4);
+  morphologyEx(fg_mask, processed_img, MORPH_DILATE, kernel, Point(-1, -1), 4);
 
-    threshold(processed_img, fg_mask, 240, 255, THRESH_BINARY);
+  threshold(processed_img, fg_mask, 240, 255, THRESH_BINARY);
 }
 
-
-pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img){
+pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img) {
   Mat bnw_dynamic;
-    threshold(dynamic_img * 255, bnw_dynamic, 60, 255, THRESH_BINARY);
-    Mat processed_bnw_dynamic;
-    // morphologyEx(bnw_dynamic, processed_bnw_dynamic, MORPH_ERODE,
-    // large_kernel, Point(-1, -1),
-    //         1);
-    // morphologyEx(bnw_dynamic,processed_bnw_dynamic, MORPH_DILATE, kernel,
-    // Point(-1, -1),
-    //           2);
+  threshold(dynamic_img * 255, bnw_dynamic, 60, 255, THRESH_BINARY);
+  Mat processed_bnw_dynamic;
+  // morphologyEx(bnw_dynamic, processed_bnw_dynamic, MORPH_ERODE,
+  // large_kernel, Point(-1, -1),
+  //         1);
+  // morphologyEx(bnw_dynamic,processed_bnw_dynamic, MORPH_DILATE, kernel,
+  // Point(-1, -1),
+  //           2);
 
-    bnw_dynamic.copyTo(processed_bnw_dynamic);
+  bnw_dynamic.copyTo(processed_bnw_dynamic);
 
-    // Calculate the suitable area
-    Mat final_static, final_static2;
-    processed_bnw_dynamic.convertTo(final_static2, fg_mask.depth());
-    bitwise_or(fg_mask, final_static2, final_static);
+  // Calculate the suitable area
+  Mat final_static, final_static2;
+  processed_bnw_dynamic.convertTo(final_static2, fg_mask.depth());
+  bitwise_or(fg_mask, final_static2, final_static);
 
-    double area = cv::sum(final_static).val[0] /
-                  (255.0 * final_static.cols * final_static.rows);
-    double dynamic_area =
-        cv::sum(processed_bnw_dynamic).val[0] /
-        (255.0 * processed_bnw_dynamic.cols * processed_bnw_dynamic.rows);
-    dynamic_img = processed_bnw_dynamic;
-    return make_pair(area, dynamic_area);
+  double area = cv::sum(final_static).val[0] /
+                (255.0 * final_static.cols * final_static.rows);
+  double dynamic_area =
+      cv::sum(processed_bnw_dynamic).val[0] /
+      (255.0 * processed_bnw_dynamic.cols * processed_bnw_dynamic.rows);
+  dynamic_img = processed_bnw_dynamic;
+  return make_pair(area, dynamic_area);
 }

@@ -3,9 +3,8 @@
 
 #include <bits/stdc++.h>
 
-#include <config.hpp>
 #include <arg_parser.hpp>
-
+#include <config.hpp>
 #include <opencv2/opencv.hpp>
 using namespace cv;
 using namespace std;

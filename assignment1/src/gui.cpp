@@ -90,8 +90,10 @@ void SelectionWindow::make_ccw_points() {
   auto y_sort = [](Point& a, Point& b) { return a.y < b.y; };
   auto y_rev_sort = [](Point& a, Point& b) { return a.y > b.y; };
   sort(this->selected_points.begin(), this->selected_points.end(), x_sort);
-  sort(this->selected_points.begin(), this->selected_points.begin() + 2, y_sort);
-  sort(this->selected_points.begin() + 2, this->selected_points.end(), y_rev_sort);
+  sort(this->selected_points.begin(), this->selected_points.begin() + 2,
+       y_sort);
+  sort(this->selected_points.begin() + 2, this->selected_points.end(),
+       y_rev_sort);
 
   if (arg_parser.get_bool_argument_value("debug")) {
     debug();
@@ -103,8 +105,8 @@ void SelectionWindow::add_point(Point& pt) {
 
   if (this->selected_points.size() > 1) {
     const int n = this->selected_points.size();
-    line(this->display, this->selected_points[n - 1], this->selected_points[n - 2],
-         this->colors[1]);
+    line(this->display, this->selected_points[n - 1],
+         this->selected_points[n - 2], this->colors[1]);
   }
 
   if (this->selected_points.size() == 4) {
@@ -114,8 +116,8 @@ void SelectionWindow::add_point(Point& pt) {
     for (unsigned int i = 0; i < this->selected_points.size(); i++) {
       circle(this->display, this->selected_points[i], 5, this->colors[0], -1);
       if (i != this->selected_points.size() - 1) {
-        line(this->display, this->selected_points[i], this->selected_points[i + 1],
-             this->colors[1]);
+        line(this->display, this->selected_points[i],
+             this->selected_points[i + 1], this->colors[1]);
       } else {
         line(this->display, this->selected_points[3], this->selected_points[0],
              this->colors[1]);
@@ -175,7 +177,7 @@ void AnimatedWindow::show() {
 void AnimatedWindow::get_display(Mat& dst) { dst = this->display.clone(); }
 
 void select_start_points(const Mat& input) {
-  if (!arg_parser.get_bool_argument_value("skip_initial")) {
+  if (!arg_parser.get_bool_argument_value("skip-initial")) {
     Mat input_file_bnw, input_display;
 
     cvtColor(input, input_file_bnw, COLOR_BGR2GRAY);
@@ -190,9 +192,11 @@ void select_start_points(const Mat& input) {
     }
 
     auto steps = arg_parser.get_bool_argument_value("no-animation") ? 1 : 120;
-    auto animated_window = AnimatedWindow(transformed_name, input_file_bnw,
-                                          selection_window.selected_points, steps);
-    start_points.assign(selection_window.selected_points.begin(), selection_window.selected_points.end());
+    auto animated_window =
+        AnimatedWindow(transformed_name, input_file_bnw,
+                       selection_window.selected_points, steps);
+    start_points.assign(selection_window.selected_points.begin(),
+                        selection_window.selected_points.end());
     animated_window.show();
   } else {
     get_start_points(start_points);

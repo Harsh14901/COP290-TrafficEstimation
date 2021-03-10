@@ -3,11 +3,10 @@
 
 #include <bits/stdc++.h>
 
+#include <config.hpp>
 #include <img_processor.hpp>
 #include <img_transform.hpp>
 #include <opencv2/opencv.hpp>
-
-#include <config.hpp>
 
 using namespace std;
 using namespace cv;

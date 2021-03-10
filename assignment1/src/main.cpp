@@ -19,7 +19,6 @@ tqdm bar;
 int frame_rate, frame_count;
 cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
 Mat kernel, large_kernel, frame, first_frame, fg_mask, last_frame, prev_opt;
-VideoWriter outputVideo;  // Open the output
 
 vector<Point> start_points = vector<Point>();
 
@@ -76,10 +75,12 @@ int main(int argc, char *argv[]) {
 
     Mat new_opt, dynamic_img;
     opticalFlow(last_frame, frame, new_opt);
+
     last_frame = frame;
     if (i == 0) {
       prev_opt = new_opt;
     }
+
     bitwise_and(new_opt, prev_opt, dynamic_img);
     prev_opt = new_opt;
 
@@ -90,16 +91,14 @@ int main(int argc, char *argv[]) {
 
     if (arg_parser.get_bool_argument_value("debug")) {
       imshow("Dynamic Density", dynamic_img);
-      imshow("MOG2", fg_mask);
+      imshow("Noise Reduction", fg_mask);
       if (waitKey(1) == 'n') {
         break;
       }
     }
-    outputVideo.write(fg_mask);
   }
 
   bar.finish();
-  outputVideo.release();
   cap.release();
   destroyAllWindows();
 
@@ -114,7 +113,7 @@ bool handle_arguments(int argc, char *argv[]) {
   arg_parser.set_standalone_argument("autoselect-points", "a");
   arg_parser.set_standalone_argument("debug", "d");
   arg_parser.set_standalone_argument("no-animation", "f");
-  arg_parser.set_standalone_argument("skip_initial", "s");
+  arg_parser.set_standalone_argument("skip-initial", "s");
   arg_parser.set_standalone_argument("quick", "q");
 
   return arg_parser.parse_arguments(argc, argv);
@@ -131,7 +130,7 @@ void show_usage(string name) {
           "automatically\n"
        << "\t-d, --debug \t\tDisplay debug output\n"
        << "\t-f, --no-animation \t\tDo not display animation\n"
-       << "\t-s, --skip_initial \t\tSkip initial input of points\n"
+       << "\t-s, --skip-initial \t\tSkip initial selection of points\n"
        << "\t-q, --quick \t\tOutput a quick result by skipping frames\n"
 
        << endl;
@@ -161,11 +160,5 @@ void initialize() {
   kernel = getStructuringElement(MORPH_ELLIPSE, kernel_shape);
   large_kernel = getStructuringElement(MORPH_ELLIPSE, large_kernel_shape);
 
-  int ex =
-      static_cast<int>(cap.get(CAP_PROP_FOURCC));  // Get Codec Type- Int form
-
-  Size S = Size(fg_mask.cols,  // Acquire input size
-                fg_mask.rows);
-  outputVideo.open("TestVideo.mp4", ex, cap.get(CAP_PROP_FPS), S, true);
   bar.set_theme_line();
 }

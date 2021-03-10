@@ -23,8 +23,7 @@ void validate_directory(string output_dir) {
   }
 }
 
-
-void outputCSV(vector<pair<double, double>>& density ,double frame_rate) {
+void outputCSV(vector<pair<double, double>> &density, double frame_rate) {
   cout << "[+] Writing output to CSV file" << endl;
   string file_name = arg_parser.get_argument_value("output");
   fstream out_file;

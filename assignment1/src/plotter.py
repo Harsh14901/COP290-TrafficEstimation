@@ -11,6 +11,8 @@ y2 = [d[2] for d in data]
 
 plt.plot(x, y1, 'b', label="Queue Density")
 plt.plot(x, y2, 'r', label="Dynamic Density")
+plt.xlabel("Time (s)")
+plt.ylabel("Density")
 plt.legend()
 plt.savefig("../output_files/plot.png")
 plt.show()
