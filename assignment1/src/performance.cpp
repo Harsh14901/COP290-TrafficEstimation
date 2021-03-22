@@ -1,0 +1,79 @@
+#include <performance.hpp>
+
+using namespace std;
+
+void perform_analysis(run_t f, int method) {
+  switch (method) {
+    case 1:
+      method1(f);
+      break;
+      // case 2:
+      //   method2(f);
+      //   break;
+      // case 3:
+      //   method3(f);
+      //   break;
+      // case 4:
+      //   method4(f);
+      //   break;
+      // case 5:
+      //   method5(f);
+      //   break;
+
+    default:
+      throw runtime_error("Unsupported method : " + to_string(method));
+  }
+}
+
+double compute_utility(density_t& baseline_density, density_t& test_density) {
+  assert(baseline_density.size() == test_density.size());
+  double utility = 0.0;
+  int n = baseline_density.size();
+
+  for (int i = 0; i < n; i++) {
+    auto baseline_diff =
+        abs(baseline_density[i].first - baseline_density[i].second);
+    auto test_diff = abs(test_density[i].first - test_density[i].second);
+    auto diff = abs(test_diff - baseline_diff);
+    utility += diff * diff;
+  }
+  return utility;
+}
+
+double time_execution(run_t f, runtime_params& params, density_t& density) {
+  auto start = clock();
+  f(params, density);
+  auto end = clock();
+  return double(end - start) / CLOCKS_PER_SEC;
+}
+void analyze(run_t f, runtime_params& baseline_params,
+             vector<runtime_params>& test_params, string out_file) {
+  auto results = result_t();
+
+  auto baseline_density = density_t();
+  auto baseline_time = time_execution(f, baseline_params, baseline_density);
+
+  results.push_back(make_pair(0, baseline_time));
+
+  for (auto& test_param : test_params) {
+    auto test_density = density_t();
+    auto test_time = time_execution(f, test_param, test_density);
+    auto utility = compute_utility(baseline_density, test_density);
+    results.push_back(make_pair(utility, test_time));
+  }
+
+  outputCSV(out_file, results, "utility,time");
+}
+
+void method1(run_t f) {
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
+  auto results = result_t();
+
+  for (int i = 3; i < 7; i += 2) {
+    auto test_param = runtime_params{};
+    test_param.skip_frames = i;
+    test_params.push_back(test_param);
+  }
+  analyze(f, baseline_params, test_params, "./output_files/skip_frames.csv");
+}

@@ -23,7 +23,7 @@ void validate_directory(string output_dir) {
   }
 }
 
-void outputCSV(vector<pair<double, double>> &density, double frame_rate) {
+void outputCSV(density_t &density, double frame_rate) {
   cout << "[+] Writing output to CSV file" << endl;
   string file_name = arg_parser.get_argument_value("output");
   fstream out_file;
@@ -34,15 +34,29 @@ void outputCSV(vector<pair<double, double>> &density, double frame_rate) {
     out_file << "time,queue_density,dynamic_density" << endl;
     for (uint i = 0; i < density.size(); i++) {
       auto time = double(i + 1) / frame_rate;
-      if (arg_parser.get_bool_argument_value("quick")) {
-        time *= proc_speed;
-      }
       out_file << time << "," << density[i].first << "," << density[i].second
                << endl;
     }
 
     out_file.close();
     cout << "[+] Density data succesfully written to: " << file_name << endl;
+  }
+}
+
+void outputCSV(string file_name, result_t &result, string header) {
+  cout << "[+] Writing output to CSV file" << endl;
+  fstream out_file;
+  out_file.open(file_name, ios::out);
+  if (!out_file) {
+    cerr << "[-] Error writing to the output file: " << file_name << endl;
+  } else {
+    out_file << header << endl;
+    for (uint i = 0; i < result.size(); i++) {
+      out_file << result[i].first << "," << result[i].second << endl;
+    }
+
+    out_file.close();
+    cout << "[+] Analysis data succesfully written to: " << file_name << endl;
   }
 }
 

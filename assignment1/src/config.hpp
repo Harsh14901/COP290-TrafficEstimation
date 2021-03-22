@@ -15,8 +15,17 @@ const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
            fill_color = Scalar(100, 100, 0);
 const auto original_name = "original", transformed_name = "transformed",
            cropped_name = "cropped";
-const auto proc_speed = 3.0; 
+typedef vector<pair<double, double>> density_t;
+typedef density_t result_t;
 
 extern vector<Point> start_points;
+
+struct runtime_params {
+  int skip_frames = 0;
+  bool sparse_optical_flow = 0;
+  pair<int, int> resolution = make_pair(1920, 1080);
+  int split_frame = 1;
+  int split_video = 1;
+};
 
 #endif
