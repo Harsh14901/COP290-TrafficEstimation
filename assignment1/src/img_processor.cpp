@@ -15,9 +15,9 @@ void remove_black_borders(const Mat& src, Mat& dst) {
 }
 
 void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
-                        const Mat& bg_img, Mat& fg_mask) {
+                        const Mat& bg_img, Mat& fg_mask, const Size& resolution) {
   Mat frame = bg_img.clone();
-  preprocess_frame(frame);
+  preprocess_frame(frame, resolution);
 
   for (int i = 0; i < bg_sub->getHistory(); i++) {
     bg_sub->apply(frame, fg_mask, learning_rate);
@@ -25,7 +25,7 @@ void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
 }
 
 void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
-                 VideoCapture& cap, Mat& fg_mask) {
+                 VideoCapture& cap, Mat& fg_mask, const Size& resolution) {
   Mat frame;
   for (int i = 0; i < bg_sub->getHistory(); i++) {
     cap.read(frame);
@@ -33,7 +33,7 @@ void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
       cerr << "[+] Video stream finished before training" << endl;
       throw "Insufficient Video Stream";
     }
-    preprocess_frame(frame);
+    preprocess_frame(frame, resolution);
 
     bg_sub->apply(frame, fg_mask, learning_rate);
   }
@@ -68,13 +68,15 @@ void opticalFlow(const Mat& prvs, const Mat& next, Mat& dst) {
   // return _hsv[2];
 }
 
-void preprocess_frame(Mat& frame) {
+void preprocess_frame(Mat& frame, const Size& resolution) {
   Mat temp;
+  resize(frame, temp, resolution, 0, 0, INTER_CUBIC);
+  frame = temp;
   cvtColor(frame, temp, COLOR_BGR2GRAY);
 
   transform_image(temp, frame);
   remove_black_borders(frame, temp);
-  crop_end_pts(temp, frame);
+  crop_end_pts(temp, frame, resolution);
 }
 
 void reduce_noise(Mat& fg_mask, const Mat& kernel) {

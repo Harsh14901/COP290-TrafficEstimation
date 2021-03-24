@@ -10,9 +10,9 @@ void perform_analysis(run_t f, int method) {
       // case 2:
       //   method2(f);
       //   break;
-      // case 3:
-      //   method3(f);
-      //   break;
+      case 3:
+        method3(f);
+        break;
       // case 4:
       //   method4(f);
       //   break;
@@ -68,7 +68,6 @@ void analyze(run_t f, runtime_params& baseline_params,
 void method1(run_t f) {
   auto baseline_params = runtime_params{};
   vector<runtime_params> test_params;
-  auto results = result_t();
 
   for (int i = 3; i < 7; i += 2) {
     auto test_param = runtime_params{};
@@ -76,4 +75,27 @@ void method1(run_t f) {
     test_params.push_back(test_param);
   }
   analyze(f, baseline_params, test_params, "./output_files/skip_frames.csv");
+}
+
+void method3(run_t f){
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
+
+  auto add_res = [&](int width, int height){
+    test_params.push_back(baseline_params);
+    test_params.back().resolution = Size(width, height);
+  };
+  
+  // add_res(1920, 1080);
+  // add_res(1366, 768);
+  // add_res(1536, 864);
+  // add_res(1440, 900);
+  // add_res(640, 360);
+  // add_res(1600, 900);
+  add_res(1024, 768);
+  // add_res(1280, 1024); 
+  add_res(1280, 720); 
+
+  analyze(f, baseline_params, test_params, "./output_files/resolution.csv"); 
+
 }

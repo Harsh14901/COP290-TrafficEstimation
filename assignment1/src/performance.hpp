@@ -3,6 +3,7 @@
 #include <bits/stdc++.h>
 
 #include <config.hpp>
+#include <opencv2/opencv.hpp>
 #include <util/util.hpp>
 using namespace std;
 
@@ -17,7 +18,7 @@ void perform_analysis(run_t f, int method);
 
 void method1(run_t f);
 // void method2(run_t f);
-// void method3(run_t f);
+void method3(run_t f);
 // void method4(run_t f);
 // void method5(run_t f);
 #endif

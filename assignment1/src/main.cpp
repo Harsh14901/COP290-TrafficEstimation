@@ -25,7 +25,7 @@ vector<Point> start_points = vector<Point>();
 
 void show_usage(string name);
 bool handle_arguments(int argc, char* argv[]);
-void initialize_elements(VideoCapture& cap);
+void initialize_elements(VideoCapture& cap, runtime_params& params);
 
 void run(runtime_params& params, density_t& density);
 
@@ -80,7 +80,7 @@ void show_usage(string name) {
        << endl;
 }
 
-void initialize_elements(VideoCapture& cap) {
+void initialize_elements(VideoCapture& cap, runtime_params& params) {
   string file_name = arg_parser.get_argument_value("input");
   cout << "[+] Loading File: " << file_name << endl;
   cap.open(file_name);
@@ -91,6 +91,7 @@ void initialize_elements(VideoCapture& cap) {
   }
 
   cap.read(first_frame);
+
   select_start_points(first_frame);
 
   frame_rate = cap.get(CAP_PROP_FPS);
@@ -121,13 +122,13 @@ void initialize_elements(VideoCapture& cap) {
 void run(runtime_params& params, density_t& density) {
   VideoCapture cap;
 
-  initialize_elements(cap);
+  initialize_elements(cap, params);
 
   cout << "[+] Training BG subtractor ..." << endl;
   if (arg_parser.get_bool_argument_value("train")) {
-    train_bgsub(bg_sub, cap, fg_mask);
+    train_bgsub(bg_sub, cap, fg_mask, params.resolution);
   } else {
-    train_static_bgsub(bg_sub, bg_img, fg_mask);
+    train_static_bgsub(bg_sub, bg_img, fg_mask, params.resolution);
   }
 
   cap.set(CAP_PROP_POS_FRAMES, 0);
@@ -146,7 +147,7 @@ void run(runtime_params& params, density_t& density) {
       continue;
     }
 
-    preprocess_frame(frame);
+    preprocess_frame(frame, params.resolution);
 
     if (i == 0) {
       last_frame = frame;

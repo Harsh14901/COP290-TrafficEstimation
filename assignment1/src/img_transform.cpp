@@ -14,6 +14,12 @@ Point get_division(float ratio, Point p1, Point p2) {
   return Point(int(p1.x * ratio + (1 - ratio) * p2.x),
                int(p1.y * ratio + (1 - ratio) * p2.y));
 }
+void scale_end_points(vector<Point> &end_points, const Size &resolution) {
+  for (auto &pt : end_points) {
+    pt.x *= float(resolution.width) / float(base_resolution.width);
+    pt.y *= float(resolution.height) / float(base_resolution.height);
+  }
+}
 
 const vector<Point> get_end_points(const Mat &src, float ratio) {
   bool auto_points = arg_parser.get_bool_argument_value("autoselect-points") ||
@@ -54,7 +60,6 @@ const vector<Point> get_end_points(const Mat &src, float ratio) {
                      Point(int(x + min_width / 2), int(y - max_height / 2)),
                      start_points[3]),
     };
-
     return end_points;
   }
 
@@ -78,9 +83,9 @@ void transform_image(const Mat &src, Mat &dst,
   warpPerspective(src, dst, homo, src.size());
 }
 
-void crop_end_pts(const Mat &src, Mat &dst) {
+void crop_end_pts(const Mat &src, Mat &dst, const Size& resolution) {
   auto end_pts = get_end_points(src);
-
+  scale_end_points(end_pts, resolution);
   int x_min = min(end_pts[0].x, end_pts[1].x);
   int y_min = min(end_pts[0].y, end_pts[3].y);
   int x_max = max(end_pts[2].x, end_pts[3].x);
@@ -97,4 +102,3 @@ void get_start_points(vector<Point> &points) {
   points.push_back(Point(1530, 1074));
   points.push_back(Point(1308, 264));
 }
-
