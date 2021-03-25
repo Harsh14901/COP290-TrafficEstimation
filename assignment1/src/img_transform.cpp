@@ -14,14 +14,15 @@ Point get_division(float ratio, Point p1, Point p2) {
   return Point(int(p1.x * ratio + (1 - ratio) * p2.x),
                int(p1.y * ratio + (1 - ratio) * p2.y));
 }
-void scale_end_points(vector<Point> &end_points, const Size &resolution) {
+void scale_pts(vector<Point> &end_points, const Size &resolution) {
   for (auto &pt : end_points) {
     pt.x *= float(resolution.width) / float(base_resolution.width);
     pt.y *= float(resolution.height) / float(base_resolution.height);
   }
 }
 
-const vector<Point> get_end_points(const Mat &src, float ratio) {
+const vector<Point> get_end_points(const Mat &src, float ratio,
+                                   const Size &resolution) {
   bool auto_points = arg_parser.get_bool_argument_value("autoselect-points") ||
                      arg_parser.get_bool_argument_value("skip-initial");
   if (auto_points) {
@@ -63,17 +64,21 @@ const vector<Point> get_end_points(const Mat &src, float ratio) {
     return end_points;
   }
 
-  const vector<Point> end_points{
+  vector<Point> end_points{
       get_division(ratio, Point(472, 52), start_points[0]),
       get_division(ratio, Point(472, 830), start_points[1]),
       get_division(ratio, Point(800, 830), start_points[2]),
       get_division(ratio, Point(800, 52), start_points[3]),
   };
+  scale_pts(end_points, resolution);
+
   return end_points;
 }
 
-void transform_image(const Mat &src, Mat &dst, float ratio) {
-  transform_image(src, dst, get_end_points(src, ratio));
+void transform_image(const Mat &src, Mat &dst, float ratio,
+                     const Size &resolution) {
+  auto end_points = get_end_points(src, ratio, resolution);
+  transform_image(src, dst, end_points);
 }
 
 void transform_image(const Mat &src, Mat &dst,
@@ -83,9 +88,8 @@ void transform_image(const Mat &src, Mat &dst,
   warpPerspective(src, dst, homo, src.size());
 }
 
-void crop_end_pts(const Mat &src, Mat &dst, const Size& resolution) {
-  auto end_pts = get_end_points(src);
-  scale_end_points(end_pts, resolution);
+void crop_end_pts(const Mat &src, Mat &dst, const Size &resolution) {
+  auto end_pts = get_end_points(src, 1, resolution);
   int x_min = min(end_pts[0].x, end_pts[1].x);
   int y_min = min(end_pts[0].y, end_pts[3].y);
   int x_max = max(end_pts[2].x, end_pts[3].x);

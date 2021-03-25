@@ -176,7 +176,7 @@ void AnimatedWindow::show() {
 
 void AnimatedWindow::get_display(Mat& dst) { dst = this->display.clone(); }
 
-void select_start_points(const Mat& input) {
+void select_start_points(const Mat& input, const Size& resolution) {
   if (!arg_parser.get_bool_argument_value("skip-initial")) {
     Mat input_file_bnw, input_display;
 
@@ -201,4 +201,5 @@ void select_start_points(const Mat& input) {
   } else {
     get_start_points(start_points);
   }
+  scale_pts(start_points, resolution);
 }

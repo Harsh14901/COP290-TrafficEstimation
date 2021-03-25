@@ -92,7 +92,7 @@ void initialize_elements(VideoCapture& cap, runtime_params& params) {
 
   cap.read(first_frame);
 
-  select_start_points(first_frame);
+  select_start_points(first_frame, params.resolution);
 
   frame_rate = cap.get(CAP_PROP_FPS);
   frame_count = cap.get(CAP_PROP_FRAME_COUNT);

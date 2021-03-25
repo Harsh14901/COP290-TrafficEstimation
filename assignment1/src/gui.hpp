@@ -67,6 +67,6 @@ class AnimatedWindow : public Window {
   void get_display(Mat& dst);
 };
 
-void select_start_points(const Mat& input);
+void select_start_points(const Mat& input, const Size& resolution = base_resolution);
 
 #endif

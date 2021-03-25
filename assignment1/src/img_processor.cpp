@@ -15,7 +15,8 @@ void remove_black_borders(const Mat& src, Mat& dst) {
 }
 
 void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
-                        const Mat& bg_img, Mat& fg_mask, const Size& resolution) {
+                        const Mat& bg_img, Mat& fg_mask,
+                        const Size& resolution) {
   Mat frame = bg_img.clone();
   preprocess_frame(frame, resolution);
 
@@ -74,7 +75,7 @@ void preprocess_frame(Mat& frame, const Size& resolution) {
   frame = temp;
   cvtColor(frame, temp, COLOR_BGR2GRAY);
 
-  transform_image(temp, frame);
+  transform_image(temp, frame, 1, resolution);
   remove_black_borders(frame, temp);
   crop_end_pts(temp, frame, resolution);
 }
