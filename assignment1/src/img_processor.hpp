@@ -17,3 +17,4 @@ void preprocess_frame(Mat& frame, const Size& resolution);
 void reduce_noise(Mat& fg_mask, const Mat& kernel);
 
 pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img);
+pair<double, double> compute_density(const Mat& fg_mask);

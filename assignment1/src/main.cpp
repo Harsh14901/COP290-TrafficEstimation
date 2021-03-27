@@ -8,6 +8,9 @@
 #include <opencv2/opencv.hpp>
 #include <performance.hpp>
 #include <util/util.hpp>
+#include <chrono>
+
+#include <pthread.h>
 
 #include "util/arg_parser.hpp"
 #include "util/tqdm.h"
@@ -18,7 +21,7 @@ density_t density;
 tqdm bar;
 int frame_rate, frame_count;
 cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
-Mat kernel, large_kernel, frame, first_frame, fg_mask, last_frame, prev_opt,
+Mat kernel, large_kernel, first_frame, prev_opt,
     bg_img;
 
 vector<Point> start_points = vector<Point>();
@@ -28,6 +31,11 @@ bool handle_arguments(int argc, char* argv[]);
 void initialize_elements(VideoCapture& cap, runtime_params& params);
 
 void run(runtime_params& params, density_t& density);
+
+
+VideoCapture cap;
+int framesProcessed = 0;
+pthread_mutex_t mutex_lock;
 
 int main(int argc, char* argv[]) {
   if (!handle_arguments(argc, argv)) {
@@ -41,6 +49,8 @@ int main(int argc, char* argv[]) {
   } else {
     auto params = runtime_params{};
     auto density = density_t();
+
+
     run(params, density);
 
     outputCSV(density, frame_rate);
@@ -84,7 +94,6 @@ void initialize_elements(VideoCapture& cap, runtime_params& params) {
   string file_name = arg_parser.get_argument_value("input");
   cout << "[+] Loading File: " << file_name << endl;
   cap.open(file_name);
-
   if (!cap.isOpened()) {
     cerr << "[-] Unable to open the video" << endl;
     throw "Could not load video";
@@ -119,11 +128,105 @@ void initialize_elements(VideoCapture& cap, runtime_params& params) {
   bar.set_theme_line();
 }
 
+struct workerStruct
+{
+  runtime_params* params;
+};
+
+
+
+void* worker(void* arg){
+  struct workerStruct *args = (struct workerStruct *)arg;
+
+  auto params = args->params;
+  int num_threads = args->params->split_video;
+  Mat last_frame;
+  while (true)
+  {
+  
+
+
+    if(num_threads!=1) pthread_mutex_lock(&mutex_lock);
+
+    Mat frame;
+    cap.read(frame);
+    int i = framesProcessed;
+    framesProcessed++;
+    bar.progress(i, frame_count);
+
+    if(num_threads!=1) pthread_mutex_unlock(&mutex_lock);
+
+
+    if (frame.empty()) {
+      cerr << "[-] Video stream terminated unexpectedly" << endl;
+      break;
+    }
+
+    if (framesProcessed % (1 + params->skip_frames) != 0) {
+      continue;
+    }
+
+    preprocess_frame(frame, params->resolution);
+
+
+
+    Mat fg_mask;
+    bg_sub->apply(frame, fg_mask, learning_rate);
+
+    if (arg_parser.get_bool_argument_value("debug")) {
+      imshow("Preprocessed", fg_mask);
+    }
+
+    reduce_noise(fg_mask, kernel);
+
+    
+
+    Mat new_opt, dynamic_img;
+    
+    pair<double, double> density_point;
+    if(params->calc_dynamic_density){
+      if (i < num_threads) {
+        last_frame = frame;
+      }
+      opticalFlow(last_frame, frame, new_opt);
+
+      last_frame = frame;
+      if (i < num_threads) {
+        prev_opt = new_opt;
+      }
+
+      bitwise_and(new_opt, prev_opt, dynamic_img);
+      prev_opt = new_opt;
+
+      density_point = compute_density(fg_mask,dynamic_img);
+    }else{
+      density_point = compute_density(fg_mask);
+    }
+    
+    // cout << "Seg fault will occur here" << i << endl;
+    // density[i] = density_point;
+    // cout << "Seg fault must have occured" << endl;
+    
+    
+    if(i%500==0){
+      cout << i << ":" << density_point.first << "," << density_point.second << endl;
+    } 
+  
+  }
+
+  return NULL;
+
+}
+
 void run(runtime_params& params, density_t& density) {
-  VideoCapture cap;
+  
+
 
   initialize_elements(cap, params);
 
+  density.reserve(frame_count);
+
+  Mat fg_mask;
   cout << "[+] Training BG subtractor ..." << endl;
   if (arg_parser.get_bool_argument_value("train")) {
     train_bgsub(bg_sub, cap, fg_mask, params.resolution);
@@ -133,58 +236,65 @@ void run(runtime_params& params, density_t& density) {
 
   cap.set(CAP_PROP_POS_FRAMES, 0);
 
-  for (int i = 0; i < frame_count; i++) {
-    bar.progress(i, frame_count);
-    cap.read(frame);
+  // For Multithreading, 2 approaches may be used:
+  // Either run 4 threads doing the same thing but on diff data
+  // Or storing pre-processed frames in some array and then supplying it to each of 3 threads
 
-    if (frame.empty()) {
-      cerr << "[-] Video stream terminated unexpectedly" << endl;
-      break;
-    }
+  // for (int i = 0; i < frame_count; i++) {
+  //   bar.progress(i, frame_count);
+    auto start = chrono::steady_clock::now();
 
-    if (i % (1 + params.skip_frames) != 0) {
-      density.push_back(density.back());
-      continue;
-    }
 
-    preprocess_frame(frame, params.resolution);
 
-    if (i == 0) {
-      last_frame = frame;
-    }
+    workerStruct wS;
+    wS.params = &params;
 
-    bg_sub->apply(frame, fg_mask, learning_rate);
 
-    if (arg_parser.get_bool_argument_value("debug")) {
-      imshow("Preprocessed", fg_mask);
-    }
+    if(params.split_video==1){
+      cout << "YO" << endl;
+      worker((void *)&wS);
+    }else{
+      int n = params.split_video;
 
-    reduce_noise(fg_mask, kernel);
-
-    Mat new_opt, dynamic_img;
-    opticalFlow(last_frame, frame, new_opt);
-
-    last_frame = frame;
-    if (i == 0) {
-      prev_opt = new_opt;
-    }
-
-    bitwise_and(new_opt, prev_opt, dynamic_img);
-    prev_opt = new_opt;
-
-    auto density_point = compute_density(fg_mask, dynamic_img);
-
-    // Push density data to array
-    density.push_back(density_point);
-
-    if (arg_parser.get_bool_argument_value("debug")) {
-      imshow("Dynamic Density", dynamic_img);
-      imshow("Noise Reduction", fg_mask);
-      if (waitKey(1) == 'n') {
-        break;
+      if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
+          printf("\n mutex init has failed\n");
+          return;
       }
+
+      pthread_t tid[n];
+      int error;
+      int ii = 0;    
+
+      cout << "Creating threads" << endl;
+      while (ii < n) {
+          error = pthread_create(&(tid[ii]),NULL,
+                                &worker, (void *)&wS);
+          if (error != 0)
+              printf("\nThread can't be created :[%s]",
+                    strerror(error));
+          ii++;
+          cout << "Created thread " << ii << endl;
+      } 
+      for(int ii=0;ii<n;ii++){
+        pthread_join(tid[ii], NULL);
+      }
+      pthread_mutex_destroy(&mutex_lock);
     }
-  }
+    // worker(&wS);
+    
+    // if (arg_parser.get_bool_argument_value("debug")) {
+    //   imshow("Dynamic Density", dynamic_img);
+    //   imshow("Noise Reduction", fg_mask);
+    //   if (waitKey(1) == 'n') {
+    //     break;
+    //   }
+    // }
+  // }
+    auto end = chrono::steady_clock::now();
+
+      cout << "Elapsed time in milliseconds : "
+        << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+        << " ms" << endl;
 
   bar.finish();
   cap.release();

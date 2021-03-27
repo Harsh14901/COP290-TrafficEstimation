@@ -97,13 +97,7 @@ pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img) {
   Mat bnw_dynamic;
   threshold(dynamic_img * 255, bnw_dynamic, 60, 255, THRESH_BINARY);
   Mat processed_bnw_dynamic;
-  // morphologyEx(bnw_dynamic, processed_bnw_dynamic, MORPH_ERODE,
-  // large_kernel, Point(-1, -1),
-  //         1);
-  // morphologyEx(bnw_dynamic,processed_bnw_dynamic, MORPH_DILATE, kernel,
-  // Point(-1, -1),
-  //           2);
-
+  
   bnw_dynamic.copyTo(processed_bnw_dynamic);
 
   // Calculate the suitable area
@@ -118,4 +112,10 @@ pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img) {
       (255.0 * processed_bnw_dynamic.cols * processed_bnw_dynamic.rows);
   dynamic_img = processed_bnw_dynamic;
   return make_pair(area, dynamic_area);
+}
+
+
+pair<double,double> compute_density(const Mat& fg_mask){
+  return make_pair(sum(fg_mask).val[0] /
+                (255.0 * fg_mask.cols * fg_mask.rows), 0);
 }

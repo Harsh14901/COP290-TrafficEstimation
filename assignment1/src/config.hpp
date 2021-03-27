@@ -3,6 +3,7 @@
 #include <bits/stdc++.h>
 
 #include <opencv2/opencv.hpp>
+#include <opencv4/opencv2/opencv.hpp>
 
 using namespace std;
 using namespace cv;
@@ -22,11 +23,12 @@ typedef density_t result_t;
 extern vector<Point> start_points;
 
 struct runtime_params {
-  int skip_frames = 0;
-  bool sparse_optical_flow = 0;
+  int skip_frames = 1;
+  bool sparse_optical_flow = false;
+  bool calc_dynamic_density = true;
   Size resolution = base_resolution;
-  int split_frame = 1;
-  int split_video = 1;
+  int split_frame = 1;   
+  int split_video = 4;   // Indicates number of threads to be used
 };
 
 #endif

@@ -25,7 +25,7 @@ run: all
 	./$(BIN)/$(EXECUTABLE) $(args)
 $(BIN)/$(EXECUTABLE): $(SRC)/*.cpp ./src/util/*.cpp
 	
-	$(CC) $(C_FLAGS) -I$(INCLUDE) -I ./src/ -L$(LIB) $^ -o $@ $(LIBS)
+	$(CC) $(C_FLAGS) -I$(INCLUDE) -I ./src/ -L$(LIB) $^ -o $@ $(LIBS) -lpthread -lm
 tar:
 	tar -zcvf 2019CS10431_2019CS50443_ass1_part2.tar.gz --directory=./ --exclude-vcs --exclude-vcs-ignores --exclude=*.tar.gz --exclude=".vscode/*" --exclude="input_files/trafficvideo.mp4" * 
 plot:
