@@ -25,10 +25,14 @@ extern vector<Point> start_points;
 struct runtime_params {
   int skip_frames = 1;
   bool sparse_optical_flow = false;
-  bool calc_dynamic_density = true;
+  bool calc_dynamic_density = false;
   Size resolution = base_resolution;
-  int split_frame = 1;   
-  int split_video = 4;   // Indicates number of threads to be used
+  int split_frame = 1;
+  int split_video = 4;  // Indicates number of threads to be used
 };
 
+struct worker_params {
+  runtime_params* params;
+  density_t* density_store;
+};
 #endif

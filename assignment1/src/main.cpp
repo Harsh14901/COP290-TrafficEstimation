@@ -1,6 +1,9 @@
 // Uncomment the following line if you are compiling this code in Visual Studio
 //#include "stdafx.h"
 
+#include <pthread.h>
+
+#include <chrono>
 #include <config.hpp>
 #include <gui.hpp>
 #include <img_processor.hpp>
@@ -8,21 +11,17 @@
 #include <opencv2/opencv.hpp>
 #include <performance.hpp>
 #include <util/util.hpp>
-#include <chrono>
-
-#include <pthread.h>
 
 #include "util/arg_parser.hpp"
 #include "util/tqdm.h"
 using namespace cv;
 using namespace std;
 
-density_t density;
+// density_t density;
 tqdm bar;
 int frame_rate, frame_count;
 cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
-Mat kernel, large_kernel, first_frame, prev_opt,
-    bg_img;
+Mat kernel, large_kernel, first_frame, prev_opt, bg_img;
 
 vector<Point> start_points = vector<Point>();
 
@@ -32,9 +31,8 @@ void initialize_elements(VideoCapture& cap, runtime_params& params);
 
 void run(runtime_params& params, density_t& density);
 
-
 VideoCapture cap;
-int framesProcessed = 0;
+int frames_processed = 0;
 pthread_mutex_t mutex_lock;
 
 int main(int argc, char* argv[]) {
@@ -49,7 +47,6 @@ int main(int argc, char* argv[]) {
   } else {
     auto params = runtime_params{};
     auto density = density_t();
-
 
     run(params, density);
 
@@ -128,47 +125,33 @@ void initialize_elements(VideoCapture& cap, runtime_params& params) {
   bar.set_theme_line();
 }
 
-struct workerStruct
-{
-  runtime_params* params;
-};
-
-
-
-void* worker(void* arg){
-  struct workerStruct *args = (struct workerStruct *)arg;
+void* worker(void* arg) {
+  struct worker_params* args = (struct worker_params*)arg;
 
   auto params = args->params;
   int num_threads = args->params->split_video;
   Mat last_frame;
-  while (true)
-  {
-  
-
-
-    if(num_threads!=1) pthread_mutex_lock(&mutex_lock);
+  while (true) {
+    if (num_threads != 1) pthread_mutex_lock(&mutex_lock);
 
     Mat frame;
     cap.read(frame);
-    int i = framesProcessed;
-    framesProcessed++;
+    int i = frames_processed;
+    frames_processed++;
     bar.progress(i, frame_count);
 
-    if(num_threads!=1) pthread_mutex_unlock(&mutex_lock);
-
+    if (num_threads != 1) pthread_mutex_unlock(&mutex_lock);
 
     if (frame.empty()) {
       cerr << "[-] Video stream terminated unexpectedly" << endl;
       break;
     }
 
-    if (framesProcessed % (1 + params->skip_frames) != 0) {
+    if (frames_processed % (1 + params->skip_frames) != 0) {
       continue;
     }
 
     preprocess_frame(frame, params->resolution);
-
-
 
     Mat fg_mask;
     bg_sub->apply(frame, fg_mask, learning_rate);
@@ -179,12 +162,10 @@ void* worker(void* arg){
 
     reduce_noise(fg_mask, kernel);
 
-    
-
     Mat new_opt, dynamic_img;
-    
+
     pair<double, double> density_point;
-    if(params->calc_dynamic_density){
+    if (params->calc_dynamic_density) {
       if (i < num_threads) {
         last_frame = frame;
       }
@@ -198,33 +179,20 @@ void* worker(void* arg){
       bitwise_and(new_opt, prev_opt, dynamic_img);
       prev_opt = new_opt;
 
-      density_point = compute_density(fg_mask,dynamic_img);
-    }else{
+      density_point = compute_density(fg_mask, dynamic_img);
+    } else {
       density_point = compute_density(fg_mask);
     }
-    
-    // cout << "Seg fault will occur here" << i << endl;
-    // density[i] = density_point;
-    // cout << "Seg fault must have occured" << endl;
-    
-    
-    if(i%500==0){
-      cout << i << ":" << density_point.first << "," << density_point.second << endl;
-    } 
-  
+
+    args->density_store->at(i) = density_point;
   }
 
   return NULL;
-
 }
 
 void run(runtime_params& params, density_t& density) {
-  
-
-
   initialize_elements(cap, params);
-
-  density.reserve(frame_count);
+  density.resize(frame_count);
 
   Mat fg_mask;
   cout << "[+] Training BG subtractor ..." << endl;
@@ -238,63 +206,60 @@ void run(runtime_params& params, density_t& density) {
 
   // For Multithreading, 2 approaches may be used:
   // Either run 4 threads doing the same thing but on diff data
-  // Or storing pre-processed frames in some array and then supplying it to each of 3 threads
+  // Or storing pre-processed frames in some array and then supplying it to each
+  // of 3 threads
 
   // for (int i = 0; i < frame_count; i++) {
   //   bar.progress(i, frame_count);
-    auto start = chrono::steady_clock::now();
+  auto start = chrono::steady_clock::now();
 
+  worker_params w_params;
+  w_params.params = &params;
+  w_params.density_store = &density;
 
+  if (params.split_video == 1) {
+    cout << "[+] Running in single threaded mode" << endl;
+    worker((void*)&w_params);
+  } else {
+    int n = params.split_video;
 
-    workerStruct wS;
-    wS.params = &params;
-
-
-    if(params.split_video==1){
-      cout << "YO" << endl;
-      worker((void *)&wS);
-    }else{
-      int n = params.split_video;
-
-      if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
-          printf("\n mutex init has failed\n");
-          return;
-      }
-
-      pthread_t tid[n];
-      int error;
-      int ii = 0;    
-
-      cout << "Creating threads" << endl;
-      while (ii < n) {
-          error = pthread_create(&(tid[ii]),NULL,
-                                &worker, (void *)&wS);
-          if (error != 0)
-              printf("\nThread can't be created :[%s]",
-                    strerror(error));
-          ii++;
-          cout << "Created thread " << ii << endl;
-      } 
-      for(int ii=0;ii<n;ii++){
-        pthread_join(tid[ii], NULL);
-      }
-      pthread_mutex_destroy(&mutex_lock);
+    if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
+      printf("[-] Mutex init has failed\n");
+      return;
     }
-    // worker(&wS);
-    
-    // if (arg_parser.get_bool_argument_value("debug")) {
-    //   imshow("Dynamic Density", dynamic_img);
-    //   imshow("Noise Reduction", fg_mask);
-    //   if (waitKey(1) == 'n') {
-    //     break;
-    //   }
-    // }
-  // }
-    auto end = chrono::steady_clock::now();
 
-      cout << "Elapsed time in milliseconds : "
-        << chrono::duration_cast<chrono::milliseconds>(end - start).count()
-        << " ms" << endl;
+    pthread_t tid[n];
+    int error;
+    int ii = 0;
+
+    cout << "[+] Creating threads" << endl;
+    while (ii < n) {
+      error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&w_params);
+      if (error != 0)
+        printf("[-] Thread can't be created :[%s]", strerror(error));
+      ii++;
+      cout << "[+] Created thread " << ii << endl;
+    }
+    for (int ii = 0; ii < n; ii++) {
+      pthread_join(tid[ii], NULL);
+    }
+    pthread_mutex_destroy(&mutex_lock);
+  }
+  // worker(&w_params);
+
+  // if (arg_parser.get_bool_argument_value("debug")) {
+  //   imshow("Dynamic Density", dynamic_img);
+  //   imshow("Noise Reduction", fg_mask);
+  //   if (waitKey(1) == 'n') {
+  //     break;
+  //   }
+  // }
+  // }
+  auto end = chrono::steady_clock::now();
+
+  cout << "Elapsed time in milliseconds : "
+       << chrono::duration_cast<chrono::milliseconds>(end - start).count()
+       << " ms" << endl;
 
   bar.finish();
   cap.release();

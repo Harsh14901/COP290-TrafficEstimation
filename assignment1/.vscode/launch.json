@@ -19,7 +19,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "args": ["-s", "-m", "3", "-i", "./input_files/a.mp4", "-d"],
+            "args": ["-s"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
