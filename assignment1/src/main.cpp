@@ -17,7 +17,6 @@
 using namespace cv;
 using namespace std;
 
-// density_t density;
 tqdm bar;
 int frame_rate, frame_count;
 cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
@@ -32,8 +31,6 @@ void initialize_elements(VideoCapture& cap, runtime_params& params);
 void run(runtime_params& params, density_t& density);
 
 VideoCapture cap;
-int frames_processed = 0;
-pthread_mutex_t mutex_lock;
 
 int main(int argc, char* argv[]) {
   if (!handle_arguments(argc, argv)) {
@@ -129,25 +126,27 @@ void* worker(void* arg) {
   struct worker_params* args = (struct worker_params*)arg;
 
   auto params = args->params;
-  int num_threads = args->params->split_video;
+  auto num_threads = args->params->split_video;
+  auto frames_processed = args->frames_processed;
+  auto mutex_lock = args->mutex_lock;
+
   Mat last_frame;
   while (true) {
-    if (num_threads != 1) pthread_mutex_lock(&mutex_lock);
+    if (num_threads != 1) pthread_mutex_lock(mutex_lock);
 
     Mat frame;
     cap.read(frame);
-    int i = frames_processed;
-    frames_processed++;
+    int i = ++(*frames_processed);
     bar.progress(i, frame_count);
 
-    if (num_threads != 1) pthread_mutex_unlock(&mutex_lock);
+    if (num_threads != 1) pthread_mutex_unlock(mutex_lock);
 
     if (frame.empty()) {
       cerr << "[-] Video stream terminated unexpectedly" << endl;
       break;
     }
 
-    if (frames_processed % (1 + params->skip_frames) != 0) {
+    if (i % (1 + params->skip_frames) != 0) {
       continue;
     }
 
@@ -185,6 +184,14 @@ void* worker(void* arg) {
     }
 
     args->density_store->at(i) = density_point;
+
+    if (arg_parser.get_bool_argument_value("debug")) {
+      imshow("Dynamic Density", dynamic_img);
+      imshow("Noise Reduction", fg_mask);
+      if (waitKey(1) == 'n') {
+        break;
+      }
+    }
   }
 
   return NULL;
@@ -192,7 +199,6 @@ void* worker(void* arg) {
 
 void run(runtime_params& params, density_t& density) {
   initialize_elements(cap, params);
-  density.resize(frame_count);
 
   Mat fg_mask;
   cout << "[+] Training BG subtractor ..." << endl;
@@ -208,58 +214,46 @@ void run(runtime_params& params, density_t& density) {
   // Either run 4 threads doing the same thing but on diff data
   // Or storing pre-processed frames in some array and then supplying it to each
   // of 3 threads
-
-  // for (int i = 0; i < frame_count; i++) {
-  //   bar.progress(i, frame_count);
-  auto start = chrono::steady_clock::now();
+  int frames_processed = 0;
+  density.resize(frame_count);
 
   worker_params w_params;
   w_params.params = &params;
   w_params.density_store = &density;
 
+  auto mutex_lock = pthread_mutex_t();
+  w_params.mutex_lock = &mutex_lock;
+
+  w_params.frames_processed = &frames_processed;
+
   if (params.split_video == 1) {
     cout << "[+] Running in single threaded mode" << endl;
     worker((void*)&w_params);
   } else {
-    int n = params.split_video;
+    int num_threads = params.split_video;
 
-    if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
+    if (pthread_mutex_init(w_params.mutex_lock, NULL) != 0) {
       printf("[-] Mutex init has failed\n");
       return;
     }
 
-    pthread_t tid[n];
+    pthread_t tid[num_threads];
     int error;
     int ii = 0;
 
     cout << "[+] Creating threads" << endl;
-    while (ii < n) {
+    while (ii < num_threads) {
       error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&w_params);
       if (error != 0)
         printf("[-] Thread can't be created :[%s]", strerror(error));
       ii++;
       cout << "[+] Created thread " << ii << endl;
     }
-    for (int ii = 0; ii < n; ii++) {
+    for (int ii = 0; ii < num_threads; ii++) {
       pthread_join(tid[ii], NULL);
     }
-    pthread_mutex_destroy(&mutex_lock);
+    pthread_mutex_destroy(w_params.mutex_lock);
   }
-  // worker(&w_params);
-
-  // if (arg_parser.get_bool_argument_value("debug")) {
-  //   imshow("Dynamic Density", dynamic_img);
-  //   imshow("Noise Reduction", fg_mask);
-  //   if (waitKey(1) == 'n') {
-  //     break;
-  //   }
-  // }
-  // }
-  auto end = chrono::steady_clock::now();
-
-  cout << "Elapsed time in milliseconds : "
-       << chrono::duration_cast<chrono::milliseconds>(end - start).count()
-       << " ms" << endl;
 
   bar.finish();
   cap.release();

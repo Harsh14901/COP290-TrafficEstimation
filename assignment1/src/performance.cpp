@@ -7,15 +7,15 @@ void perform_analysis(run_t f, int method) {
     case 1:
       method1(f);
       break;
-      // case 2:
-      //   method2(f);
-      //   break;
-      case 3:
-        method3(f);
-        break;
-      // case 4:
-      //   method4(f);
-      //   break;
+    // case 2:
+    //   method2(f);
+    //   break;
+    case 3:
+      method3(f);
+      break;
+    case 4:
+      method4(f);
+      break;
       // case 5:
       //   method5(f);
       //   break;
@@ -77,15 +77,15 @@ void method1(run_t f) {
   analyze(f, baseline_params, test_params, "./output_files/skip_frames.csv");
 }
 
-void method3(run_t f){
+void method3(run_t f) {
   auto baseline_params = runtime_params{};
   vector<runtime_params> test_params;
 
-  auto add_res = [&](int width, int height){
+  auto add_res = [&](int width, int height) {
     test_params.push_back(baseline_params);
     test_params.back().resolution = Size(width, height);
   };
-  
+
   // add_res(1920, 1080);
   // add_res(1366, 768);
   // add_res(1536, 864);
@@ -93,9 +93,25 @@ void method3(run_t f){
   // add_res(640, 360);
   // add_res(1600, 900);
   add_res(1024, 768);
-  // add_res(1280, 1024); 
-  add_res(1280, 720); 
+  // add_res(1280, 1024);
+  add_res(1280, 720);
 
-  analyze(f, baseline_params, test_params, "./output_files/resolution.csv"); 
+  analyze(f, baseline_params, test_params, "./output_files/resolution.csv");
+}
 
+void method4(run_t f) {
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
+
+  auto add_threads = [&](int num) {
+    test_params.push_back(baseline_params);
+    test_params.back().split_video = num;
+  };
+
+  // add_threads(2);
+  add_threads(4);
+  // add_threads(6);
+  add_threads(8);
+
+  analyze(f, baseline_params, test_params, "./output_files/split_video.csv");
 }

@@ -28,11 +28,13 @@ struct runtime_params {
   bool calc_dynamic_density = false;
   Size resolution = base_resolution;
   int split_frame = 1;
-  int split_video = 4;  // Indicates number of threads to be used
+  int split_video = 1;  // Indicates number of threads to be used
 };
 
 struct worker_params {
   runtime_params* params;
   density_t* density_store;
+  int* frames_processed;
+  pthread_mutex_t* mutex_lock;
 };
 #endif
