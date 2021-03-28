@@ -16,9 +16,9 @@ void perform_analysis(run_t f, int method) {
     case 4:
       method4(f);
       break;
-      // case 5:
-      //   method5(f);
-      //   break;
+    case 5:
+      method5(f);
+      break;
 
     default:
       throw runtime_error("Unsupported method : " + to_string(method));
@@ -41,10 +41,10 @@ double compute_utility(density_t& baseline_density, density_t& test_density) {
 }
 
 double time_execution(run_t f, runtime_params& params, density_t& density) {
-  auto start = clock();
+  auto start = std::chrono::steady_clock::now();
   f(params, density);
-  auto end = clock();
-  return double(end - start) / CLOCKS_PER_SEC;
+  auto end = std::chrono::steady_clock::now();
+  return std::chrono::duration<double>(end - start).count();
 }
 void analyze(run_t f, runtime_params& baseline_params,
              vector<runtime_params>& test_params, string out_file) {
@@ -52,13 +52,16 @@ void analyze(run_t f, runtime_params& baseline_params,
 
   auto baseline_density = density_t();
   auto baseline_time = time_execution(f, baseline_params, baseline_density);
-
+  printf("BASELINE TIME: %f\n", baseline_time);
   results.push_back(make_pair(0, baseline_time));
 
   for (auto& test_param : test_params) {
     auto test_density = density_t();
     auto test_time = time_execution(f, test_param, test_density);
     auto utility = compute_utility(baseline_density, test_density);
+
+    printf("TEST TIME: %f\n", test_time);
+
     results.push_back(make_pair(utility, test_time));
   }
 
@@ -108,10 +111,26 @@ void method4(run_t f) {
     test_params.back().split_video = num;
   };
 
-  // add_threads(2);
+  add_threads(2);
   add_threads(4);
-  // add_threads(6);
+  add_threads(6);
   add_threads(8);
 
   analyze(f, baseline_params, test_params, "./output_files/split_video.csv");
+}
+void method5(run_t f) {
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
+
+  auto add_threads = [&](int num) {
+    test_params.push_back(baseline_params);
+    test_params.back().split_frame = num;
+  };
+
+  add_threads(2);
+  add_threads(4);
+  // add_threads(6);
+  // add_threads(8);
+
+  analyze(f, baseline_params, test_params, "./output_files/split_frame.csv");
 }

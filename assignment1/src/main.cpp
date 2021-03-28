@@ -19,7 +19,6 @@ using namespace std;
 
 tqdm bar;
 int frame_rate, frame_count;
-cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
 Mat kernel, large_kernel, first_frame, prev_opt, bg_img;
 
 vector<Point> start_points = vector<Point>();
@@ -29,8 +28,6 @@ bool handle_arguments(int argc, char* argv[]);
 void initialize_elements(VideoCapture& cap, runtime_params& params);
 
 void run(runtime_params& params, density_t& density);
-
-VideoCapture cap;
 
 int main(int argc, char* argv[]) {
   if (!handle_arguments(argc, argv)) {
@@ -84,7 +81,8 @@ void show_usage(string name) {
        << endl;
 }
 
-void initialize_elements(VideoCapture& cap, runtime_params& params) {
+void initialize_elements(VideoCapture& cap, runtime_params& params,
+                         cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub) {
   string file_name = arg_parser.get_argument_value("input");
   cout << "[+] Loading File: " << file_name << endl;
   cap.open(file_name);
@@ -125,24 +123,33 @@ void initialize_elements(VideoCapture& cap, runtime_params& params) {
 void* worker(void* arg) {
   struct worker_params* args = (struct worker_params*)arg;
 
+  int fp = 0;
   auto params = args->params;
-  auto num_threads = args->params->split_video;
-  auto frames_processed = args->frames_processed;
+  auto num_threads = params->split_video;
+  auto num_splits = params->split_frame;
+  auto frames_processed = (num_splits == 1) ? args->frames_processed : &fp;
   auto mutex_lock = args->mutex_lock;
+  auto density_lock = args->density_lock;
+  auto bg_sub = args->frame_get.bg_sub;
+  auto cropping_rect = *(args->frame_get.cropping_rect);
+  auto cap = *(args->frame_get.cap);
+
+  // auto pid = pthread_self();
 
   Mat last_frame;
   while (true) {
-    if (num_threads != 1) pthread_mutex_lock(mutex_lock);
+    // if (num_threads != 1)
+    pthread_mutex_lock(mutex_lock);
 
-    Mat frame;
+    Mat frame, cropped_frame;
     cap.read(frame);
     int i = ++(*frames_processed);
     bar.progress(i, frame_count);
 
-    if (num_threads != 1) pthread_mutex_unlock(mutex_lock);
+    // if (num_threads != 1)
+    pthread_mutex_unlock(mutex_lock);
 
     if (frame.empty()) {
-      cerr << "[-] Video stream terminated unexpectedly" << endl;
       break;
     }
 
@@ -151,9 +158,10 @@ void* worker(void* arg) {
     }
 
     preprocess_frame(frame, params->resolution);
+    crop_frame(frame, cropped_frame, cropping_rect);
 
     Mat fg_mask;
-    bg_sub->apply(frame, fg_mask, learning_rate);
+    bg_sub->apply(cropped_frame, fg_mask, learning_rate);
 
     if (arg_parser.get_bool_argument_value("debug")) {
       imshow("Preprocessed", fg_mask);
@@ -162,9 +170,9 @@ void* worker(void* arg) {
     reduce_noise(fg_mask, kernel);
 
     Mat new_opt, dynamic_img;
-
     pair<double, double> density_point;
     if (params->calc_dynamic_density) {
+      // TODO check if this block works
       if (i < num_threads) {
         last_frame = frame;
       }
@@ -183,32 +191,62 @@ void* worker(void* arg) {
       density_point = compute_density(fg_mask);
     }
 
-    args->density_store->at(i) = density_point;
+    if (num_splits != 1) pthread_mutex_lock(density_lock);
 
-    if (arg_parser.get_bool_argument_value("debug")) {
-      imshow("Dynamic Density", dynamic_img);
-      imshow("Noise Reduction", fg_mask);
-      if (waitKey(1) == 'n') {
-        break;
-      }
-    }
+    args->density_store->at(i).first += density_point.first;
+    args->density_store->at(i).second += density_point.second;
+
+    // printf("%ld, density_point: (%f, %f), density_store[%d]: (%f, %f)\n",
+    // pid, density_point.first, density_point.second, i,
+    // args->density_store->at(i).first, args->density_store->at(i).second);
+
+    if (num_splits != 1) pthread_mutex_unlock(density_lock);
+
+    // if (arg_parser.get_bool_argument_value("debug")) {
+    //   imshow("Dynamic Density", dynamic_img);
+    //   imshow("Noise Reduction", fg_mask);
+    //   if (waitKey(1) == 'n') {
+    //     break;
+    //   }
+    // }
   }
 
   return NULL;
 }
 
 void run(runtime_params& params, density_t& density) {
-  initialize_elements(cap, params);
+  vector<Rect2d> cropping_rects;
+  vector<VideoCapture> caps;
+  vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
+  vector<worker_params> thread_params;
+
+  VideoCapture cap;
+  cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
+  make_scaled_rects(params.split_frame, cropping_rects);
+  initialize_elements(cap, params, bg_sub);
 
   Mat fg_mask;
   cout << "[+] Training BG subtractor ..." << endl;
   if (arg_parser.get_bool_argument_value("train")) {
+    // TODO modify train_bgsub to take cropped frame
     train_bgsub(bg_sub, cap, fg_mask, params.resolution);
   } else {
-    train_static_bgsub(bg_sub, bg_img, fg_mask, params.resolution);
+    for (int i = 0; i < params.split_frame; i++) {
+      Mat cropped_bg_img;
+      crop_frame(bg_img, cropped_bg_img, cropping_rects[i]);
+      auto new_bg_sub(bg_sub);
+      train_static_bgsub(new_bg_sub, cropped_bg_img, fg_mask,
+                         params.resolution);
+      bg_subs.push_back(new_bg_sub);
+    }
   }
 
   cap.set(CAP_PROP_POS_FRAMES, 0);
+
+  for (int i = 0; i < params.split_frame; i++) {
+    auto new_cap(cap);
+    caps.push_back(new_cap);
+  }
 
   // For Multithreading, 2 approaches may be used:
   // Either run 4 threads doing the same thing but on diff data
@@ -222,17 +260,35 @@ void run(runtime_params& params, density_t& density) {
   w_params.density_store = &density;
 
   auto mutex_lock = pthread_mutex_t();
+  auto density_lock = pthread_mutex_t();
+
   w_params.mutex_lock = &mutex_lock;
+  w_params.density_lock = &density_lock;
 
   w_params.frames_processed = &frames_processed;
 
-  if (params.split_video == 1) {
-    cout << "[+] Running in single threaded mode" << endl;
-    worker((void*)&w_params);
-  } else {
-    int num_threads = params.split_video;
+  for (int i = 0; i < params.split_frame; i++) {
+    auto new_w_param(w_params);
+    new_w_param.frame_get =
+        worker_params::frame_getter{&cropping_rects[i], bg_subs[i], &caps[i]};
+    thread_params.push_back(new_w_param);
+  }
 
-    if (pthread_mutex_init(w_params.mutex_lock, NULL) != 0) {
+  if (params.split_video == 1 && params.split_frame == 1) {
+    cout << "[+] Running in single threaded mode" << endl;
+
+    worker((void*)&thread_params[0]);
+  } else {
+    // TODO here split_video is given priority
+    bool video_split = params.split_video != 1;
+    int num_threads = video_split ? params.split_video : params.split_frame;
+
+    if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
+      printf("[-] Mutex init has failed\n");
+      return;
+    }
+
+    if (pthread_mutex_init(&density_lock, NULL) != 0) {
       printf("[-] Mutex init has failed\n");
       return;
     }
@@ -243,7 +299,8 @@ void run(runtime_params& params, density_t& density) {
 
     cout << "[+] Creating threads" << endl;
     while (ii < num_threads) {
-      error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&w_params);
+      auto worker_args = (video_split) ? thread_params[0] : thread_params[ii];
+      error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&worker_args);
       if (error != 0)
         printf("[-] Thread can't be created :[%s]", strerror(error));
       ii++;
@@ -252,7 +309,15 @@ void run(runtime_params& params, density_t& density) {
     for (int ii = 0; ii < num_threads; ii++) {
       pthread_join(tid[ii], NULL);
     }
-    pthread_mutex_destroy(w_params.mutex_lock);
+    if (!video_split) {
+      for (auto& v : density) {
+        v.first /= num_threads;
+        v.second /= num_threads;
+      }
+    }
+
+    pthread_mutex_destroy(&mutex_lock);
+    pthread_mutex_destroy(&density_lock);
   }
 
   bar.finish();

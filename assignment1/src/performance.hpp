@@ -20,5 +20,5 @@ void method1(run_t f);
 // void method2(run_t f);
 void method3(run_t f);
 void method4(run_t f);
-// void method5(run_t f);
+void method5(run_t f);
 #endif

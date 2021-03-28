@@ -36,5 +36,13 @@ struct worker_params {
   density_t* density_store;
   int* frames_processed;
   pthread_mutex_t* mutex_lock;
+  struct frame_getter{
+    Rect2d* cropping_rect;
+    cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
+    VideoCapture* cap;
+  };
+  frame_getter frame_get;
+  pthread_mutex_t* density_lock;
+
 };
 #endif

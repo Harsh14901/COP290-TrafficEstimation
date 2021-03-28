@@ -106,3 +106,31 @@ void get_start_points(vector<Point> &points) {
   points.push_back(Point(1530, 1074));
   points.push_back(Point(1308, 264));
 }
+
+void make_scaled_rects(int splits, vector<Rect2d> &rects) {
+  switch (splits) {
+    case 2:
+
+      rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 0.0, 1.0 / 2.0, 1.0});
+      break;
+    case 4:
+      rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0 / 2.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 0.0, 1.0 / 2.0, 1.0 / 2.0});
+      rects.push_back(Rect2d{0.0, 1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0});
+      break;
+    default:
+      rects.push_back(Rect2d{0, 0, 1.0, 1.0});
+      break;
+  }
+}
+
+void crop_frame(Mat &frame, Mat &dst, Rect2d &scaled_rect) {
+  double rows = (double)frame.rows;
+  double cols = (double)frame.cols;
+
+  auto crop_rect = Rect2d{scaled_rect.x * cols, scaled_rect.y * rows,
+                        scaled_rect.width * cols, scaled_rect.height * rows};
+  dst = frame(crop_rect);
+}

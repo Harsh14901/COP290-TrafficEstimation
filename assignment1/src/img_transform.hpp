@@ -17,4 +17,6 @@ void transform_image(const Mat& src, Mat& dst, const vector<Point>& end_points);
 void crop_end_pts(const Mat& src, Mat& dst, const Size& resolution);
 void scale_pts(vector<Point>& end_points, const Size& resolution);
 void get_start_points(vector<Point>& points);
+void make_scaled_rects(int splits, vector<Rect2d>& rects);
+void crop_frame(Mat& frame, Mat& dst, Rect2d& scaled_rect);
 #endif
