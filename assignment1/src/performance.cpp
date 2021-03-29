@@ -52,7 +52,7 @@ void analyze(run_t f, runtime_params& baseline_params,
 
   auto baseline_density = density_t();
   auto baseline_time = time_execution(f, baseline_params, baseline_density);
-  printf("BASELINE TIME: %f\n", baseline_time);
+  printf("[#] BASELINE TIME: %f\n", baseline_time);
   results.push_back(make_pair(0, baseline_time));
 
   for (auto& test_param : test_params) {
@@ -60,12 +60,12 @@ void analyze(run_t f, runtime_params& baseline_params,
     auto test_time = time_execution(f, test_param, test_density);
     auto utility = compute_utility(baseline_density, test_density);
 
-    printf("TEST TIME: %f\n", test_time);
+    printf("[#] TEST TIME: %f\n", test_time);
 
     results.push_back(make_pair(utility, test_time));
   }
 
-  outputCSV(out_file, results, "utility,time");
+  outputCSV(out_file, results, "utility_error,time");
 }
 
 void method1(run_t f) {

@@ -28,7 +28,7 @@ struct runtime_params {
   bool sparse_optical_flow = false;
   bool calc_dynamic_density = false;
   Size resolution = base_resolution;
-  int split_frame = 2;
+  int split_frame = 1;
   int split_video = 1;  // Indicates number of threads to be used
 };
 
@@ -56,5 +56,7 @@ struct producer_params {
   sem_t* sem_exit;
   int wait_for_threads;
   int num_threads;
+  runtime_params* params;
+
 };
 #endif

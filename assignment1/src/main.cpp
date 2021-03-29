@@ -136,22 +136,28 @@ void* producer(void* arg) {
     Mat frame;
     cap.read(frame);
 
+    if (!frame.empty()) {
+      preprocess_frame(frame, args->params->resolution);
+    }
     *frame_ptr = frame;
+
 
     for (int i = 0; i < args->wait_for_threads; i++) {
       sem_post(args->producer_ready);
     }
     frame_idx++;
-    if (frame.empty()) {
+
+    if(frame.empty()){
       break;
     }
+    
   }
 
   for (int i = 0; i < args->num_threads; i++) {
     sem_post(args->producer_ready);
     sem_post(args->sem_exit);
   }
-  cout << "[#] Producer exiting" << endl;
+  // cout << "[#] Producer exiting" << endl;
   pthread_exit(NULL);
 }
 
@@ -183,7 +189,7 @@ void* worker(void* arg) {
     sem_post(consumer_ready);
 
     if (frame.empty() || i > frame_count) {
-      printf("[#] Worker %ld breaking from loop\n", pid);
+      // printf("[#] Worker %ld breaking from loop\n", pid);
       break;
     }
 
@@ -191,7 +197,6 @@ void* worker(void* arg) {
       continue;
     }
 
-    preprocess_frame(frame, params->resolution);
     crop_frame(frame, cropped_frame, cropping_rect);
 
     // TODO : bg_sub is applied after cropping end points as well as cropping
@@ -247,7 +252,7 @@ void* worker(void* arg) {
   }
 
   sem_wait(sem_exit);
-  cout << "Worker exiting: " << pid << endl;
+  // cout << "Worker exiting: " << pid << endl;
   pthread_exit(NULL);
 }
 
@@ -308,7 +313,7 @@ void run(runtime_params& params, density_t& density) {
   }
 
   producer_params prod_params{
-      &cap, &frame, &consumer_ready, &producer_ready, &sem_exit, 1, 1};
+      &cap, &frame, &consumer_ready, &producer_ready, &sem_exit, 1, 1, &params};
   bool video_split = params.split_video != 1;
   int num_threads = video_split ? params.split_video : params.split_frame;
 
@@ -324,8 +329,7 @@ void run(runtime_params& params, density_t& density) {
   }
 
   pthread_t tid[num_threads], prod_thread;
-  int ii = 0;
-  int error;
+  int ii = 0, error;
 
   error = pthread_create(&prod_thread, NULL, producer, (void*)&prod_params);
   if (error != 0) {
@@ -349,6 +353,7 @@ void run(runtime_params& params, density_t& density) {
   for (int ii = 0; ii < num_threads; ii++) {
     pthread_join(tid[ii], NULL);
   }
+  cout<<"[+] Consumer threads joined successfully"<<endl;
   if (!video_split) {
     for (auto& v : density) {
       v.first /= num_threads;
