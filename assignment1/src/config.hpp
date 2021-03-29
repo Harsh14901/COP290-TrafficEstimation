@@ -1,10 +1,10 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <bits/stdc++.h>
+#include <semaphore.h>
 
 #include <opencv2/opencv.hpp>
 #include <opencv4/opencv2/opencv.hpp>
-#include <semaphore.h>
 
 using namespace std;
 using namespace cv;
@@ -36,21 +36,19 @@ struct worker_params {
   runtime_params* params;
   density_t* density_store;
   int* frames_processed;
-  // pthread_mutex_t* mutex_lock;
   sem_t* consumer_ready;
   sem_t* producer_ready;
   sem_t* sem_exit;
-  struct frame_getter{
+  struct frame_getter {
     Rect2d* cropping_rect;
     cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
     Mat* frame_ptr;
   };
   frame_getter frame_get;
   pthread_mutex_t* density_lock;
-
 };
 
-struct producer_params{
+struct producer_params {
   VideoCapture* cap_ptr;
   Mat* frame_ptr;
   sem_t* consumer_ready;

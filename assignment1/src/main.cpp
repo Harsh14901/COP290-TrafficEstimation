@@ -127,7 +127,6 @@ void* producer(void* arg) {
 
   int frame_idx = 0;
   while (true) {
-
     for (int i = 0; i < args->wait_for_threads; i++) {
       sem_wait(args->consumer_ready);
     }
@@ -164,7 +163,6 @@ void* worker(void* arg) {
   auto num_threads = params->split_video;
   auto num_splits = params->split_frame;
   auto frames_processed = (num_splits == 1) ? args->frames_processed : &fp;
-  // auto mutex_lock = args->mutex_lock;
   auto consumer_ready = args->consumer_ready;
   auto producer_ready = args->producer_ready;
   auto sem_exit = args->sem_exit;
@@ -172,30 +170,20 @@ void* worker(void* arg) {
   auto density_lock = args->density_lock;
   auto bg_sub = args->frame_get.bg_sub;
   auto cropping_rect = *(args->frame_get.cropping_rect);
-  // auto cap = *(args->frame_get.cap);
   auto frame_ptr = args->frame_get.frame_ptr;
 
   auto pid = pthread_self();
 
   Mat last_frame;
   while (true) {
-    // if (num_threads != 1)
-    // pthread_mutex_lock(mutex_lock);
-
     Mat frame, cropped_frame;
     sem_wait(producer_ready);
     frame = *frame_ptr;
-    // cap.read(frame);
     int i = ++(*frames_processed);
     sem_post(consumer_ready);
 
-
-    // if (num_threads != 1)
-    // pthread_mutex_unlock(mutex_lock);
-
     if (frame.empty() || i > frame_count) {
       printf("[#] Worker %ld breaking from loop\n", pid);
-      // break;
       break;
     }
 
@@ -256,9 +244,6 @@ void* worker(void* arg) {
     //     break;
     //   }
     // }
-    
-    
-  
   }
 
   sem_wait(sem_exit);
@@ -268,7 +253,6 @@ void* worker(void* arg) {
 
 void run(runtime_params& params, density_t& density) {
   vector<Rect2d> cropping_rects;
-  // vector<VideoCapture> caps;
   vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
   vector<worker_params> thread_params;
 
@@ -295,11 +279,6 @@ void run(runtime_params& params, density_t& density) {
 
   cap.set(CAP_PROP_POS_FRAMES, 0);
 
-  // for (int i = 0; i < params.split_frame; i++) {
-  //   auto new_cap(cap);
-  //   caps.push_back(new_cap);
-  // }
-
   // For Multithreading, 2 approaches may be used:
   // Either run 4 threads doing the same thing but on diff data
   // Or storing pre-processed frames in some array and then supplying it to each
@@ -311,11 +290,9 @@ void run(runtime_params& params, density_t& density) {
   w_params.params = &params;
   w_params.density_store = &density;
 
-  // auto mutex_lock = pthread_mutex_t();
   sem_t producer_ready, consumer_ready, sem_exit;
   auto density_lock = pthread_mutex_t();
 
-  // w_params.mutex_lock = &mutex_lock;
   w_params.density_lock = &density_lock;
   w_params.consumer_ready = &consumer_ready;
   w_params.producer_ready = &producer_ready;
@@ -332,31 +309,11 @@ void run(runtime_params& params, density_t& density) {
 
   producer_params prod_params{
       &cap, &frame, &consumer_ready, &producer_ready, &sem_exit, 1, 1};
-  // if (params.split_video == 1 && params.split_frame == 1) {
-  //   cout << "[+] Running in single threaded mode" << endl;
-
-  //   sem_init(&producer_ready, 0, 0);
-  //   sem_init(&consumer_ready, 0, 1);
-  //   auto err = pthread_create(&prod_thread, NULL, producer, (void
-  //   *)&prod_params); if(err != 0){
-  //     cout<<"[-] Cannot start producer thread"<<endl;
-  //     return;
-  //   }
-
-  //   worker((void*)&thread_params[0]);
-  //   pthread_join(prod_thread, NULL);
-
-  // } else {
-  // TODO here split_video is given priority
   bool video_split = params.split_video != 1;
   int num_threads = video_split ? params.split_video : params.split_frame;
 
   prod_params.wait_for_threads = (video_split) ? 1 : num_threads;
   prod_params.num_threads = num_threads;
-  // if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
-  //   printf("[-] Mutex init has failed\n");
-  //   return;
-  // }
   sem_init(&producer_ready, 0, 0);
   sem_init(&sem_exit, 0, 0);
   sem_init(&consumer_ready, 0, (video_split) ? 1 : num_threads);
@@ -399,12 +356,10 @@ void run(runtime_params& params, density_t& density) {
     }
   }
 
-  // pthread_mutex_destroy(&mutex_lock);
   sem_destroy(&producer_ready);
   sem_destroy(&consumer_ready);
   sem_destroy(&sem_exit);
   pthread_mutex_destroy(&density_lock);
-  // }
 
   bar.finish();
   cap.release();
