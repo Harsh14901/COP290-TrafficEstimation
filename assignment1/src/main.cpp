@@ -20,6 +20,14 @@ using namespace std;
 tqdm bar;
 int frame_rate, frame_count;
 Mat kernel, large_kernel, first_frame, prev_opt, bg_img;
+vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
+
+auto start = std::chrono::steady_clock::now();
+
+double get_time() {
+  auto end = std::chrono::steady_clock::now();
+  return std::chrono::duration<double>(end - start).count();
+}
 
 vector<Point> start_points = vector<Point>();
 
@@ -119,38 +127,87 @@ void initialize_elements(VideoCapture& cap, runtime_params& params,
 
   bar.set_theme_line();
 }
-
 void* producer(void* arg) {
   auto args = (struct producer_params*)arg;
   auto cap = *(args->cap_ptr);
   auto frame_ptr = args->frame_ptr;
+  auto params = args->params;
+  auto cropping_rects = args->cropping_rects;
+  // auto frames_processed = args->frames_processed;
+  // auto frame_div = args->frame_div;
+  // auto div_num = args->div_num;
+  int div_num = cropping_rects.size();
+  // int frame_div = 0;
+  Mat frame, cropped_frame;
 
-  int frame_idx = 0;
+  // *frame_div = -1;
+
+  // auto refill = [&]() {
+  //   cap.read(frame);
+  //   if (!frame.empty()) {
+  //     preprocess_frame(frame, params->resolution);
+  //     crop_frame(frame, cropped_frame, cropping_rects[frame_div++]);
+  //     if (frame_div == div_num) {
+  //       frame_div = 0;
+  //       *frames_processed = *frames_processed + 1;
+  //     }
+  //     *frame_ptr = cropped_frame;
+
+  //   } else {
+  //     *frame_ptr = frame;
+  //   }
+
+  // };
+
   while (true) {
-    for (int i = 0; i < args->wait_for_threads; i++) {
-      sem_wait(args->consumer_ready);
+    // printf("[=] Producer waiting for consumers at : %f s\n", get_time());
+    // for (int i = 0; i < args->wait_for_threads; i++) {
+    sem_wait(args->consumer_ready);
+    // }
+    // printf("[=] All consumers ready at : %f s\n", get_time());
+
+    bar.progress(*(args->frames_processed), frame_count);
+
+    // if (!frame.empty() && args->wait_for_threads != 1) {
+    //   preprocess_frame(frame, args->params->resolution);
+    // }
+    // refill();
+    *(args->frame_div) = *(args->frame_div) + 1;
+    // printf("[=] Producer, set frame_div to: %d\n", *(args->frame_div));
+
+    if (*(args->frame_div) == div_num) {
+      *(args->frame_div) = 0;
+      *(args->frames_processed) = *(args->frames_processed) + 1;
     }
 
-    bar.progress(frame_idx, frame_count);
-
-    Mat frame;
-    cap.read(frame);
-
+    if (*(args->frame_div) == 0) {
+      cap.read(frame);
+      if (!frame.empty()) {
+        preprocess_frame(frame, params->resolution);
+      }
+    }
     if (!frame.empty()) {
-      preprocess_frame(frame, args->params->resolution);
+      crop_frame(frame, cropped_frame, cropping_rects[*(args->frame_div)]);
+      *frame_ptr = cropped_frame;
+
+    } else {
+      *frame_ptr = frame;
     }
-    *frame_ptr = frame;
+    // printf("[=] Producer, frames processed are: %d\n", *(args->frames_processed));
 
+    // printf("[=] Producer posting as ready : %f s\n", get_time());
 
-    for (int i = 0; i < args->wait_for_threads; i++) {
-      sem_post(args->producer_ready);
-    }
-    frame_idx++;
+    // for (int i = 0; i < args->wait_for_threads; i++) {
+    sem_post(args->producer_ready);
+    // }
 
-    if(frame.empty()){
+    // printf("[=] Producer ready : %f s\n", get_time());
+
+    // frame_idx++;
+
+    if (frame.empty()) {
       break;
     }
-    
   }
 
   for (int i = 0; i < args->num_threads; i++) {
@@ -164,31 +221,44 @@ void* producer(void* arg) {
 void* worker(void* arg) {
   struct worker_params* args = (struct worker_params*)arg;
 
-  int fp = 0;
   auto params = args->params;
   auto num_threads = params->split_video;
-  auto num_splits = params->split_frame;
-  auto frames_processed = (num_splits == 1) ? args->frames_processed : &fp;
+  // auto num_splits = params->split_frame;
+  // auto frames_processed = args->frames_processed;
+  // auto frame_div = args->frame_div;
   auto consumer_ready = args->consumer_ready;
   auto producer_ready = args->producer_ready;
   auto sem_exit = args->sem_exit;
 
-  auto density_lock = args->density_lock;
-  auto bg_sub = args->frame_get.bg_sub;
-  auto cropping_rect = *(args->frame_get.cropping_rect);
-  auto frame_ptr = args->frame_get.frame_ptr;
+  // auto density_lock = args->density_lock;
+  // auto bg_sub = args->bg_sub;
+  // auto bg_subs = args->bg_subs;
+  // auto cropping_rect = *(args->frame_get.cropping_rect);
+  auto frame_ptr = args->frame_ptr;
 
   auto pid = pthread_self();
 
   Mat last_frame;
   while (true) {
-    Mat frame, cropped_frame;
+    Mat frame;
+    // printf("[#] Thread %ld: waiting for producer at time : %f s\n", pid,get_time());
+
     sem_wait(producer_ready);
+    // printf("[#] Thread %ld: producer ready : %f s\n", pid,get_time());
+
     frame = *frame_ptr;
-    int i = ++(*frames_processed);
+    int i = *(args->frames_processed);
+    int div = *(args->frame_div);
+    // printf("[#] Consumer %ld processsing frame %d, div:%d\n", pid, i, div);
+    // printf("[#] Thread %ld: posting to consumer ready at time : %f s\n",
+    // pid,get_time());
+
     sem_post(consumer_ready);
 
-    if (frame.empty() || i > frame_count) {
+    // printf("[#] Thread %ld: consumer ready at time : %f s\n",
+    // pid,get_time());
+
+    if (frame.empty() || i >= frame_count) {
       // printf("[#] Worker %ld breaking from loop\n", pid);
       break;
     }
@@ -196,13 +266,20 @@ void* worker(void* arg) {
     if (i % (1 + params->skip_frames) != 0) {
       continue;
     }
+    // if(num_threads != 1 || (num_threads == 1 && num_splits == 1)){
+    // preprocess_frame(frame, params->resolution);
+    // }
+    // else {
+    // crop_frame(frame, cropped_frame, cropping_rect);
 
-    crop_frame(frame, cropped_frame, cropping_rect);
+    // }
 
     // TODO : bg_sub is applied after cropping end points as well as cropping
     // the frame if split_frame is used
     Mat fg_mask;
-    bg_sub->apply(cropped_frame, fg_mask, learning_rate);
+    // cout<<"SEG FAULT START"<<endl;
+    bg_subs[div]->apply(frame, fg_mask, learning_rate);
+    // cout<<"SEG FAULT END"<<endl;
 
     if (arg_parser.get_bool_argument_value("debug")) {
       imshow("Preprocessed", fg_mask);
@@ -231,7 +308,7 @@ void* worker(void* arg) {
     } else {
       density_point = compute_density(fg_mask);
     }
-    if (num_splits != 1) pthread_mutex_lock(density_lock);
+    // if (num_splits != 1) pthread_mutex_lock(density_lock);
 
     args->density_store->at(i).first += density_point.first;
     args->density_store->at(i).second += density_point.second;
@@ -240,7 +317,7 @@ void* worker(void* arg) {
     // pid, density_point.first, density_point.second, i,
     // args->density_store->at(i).first, args->density_store->at(i).second);
 
-    if (num_splits != 1) pthread_mutex_unlock(density_lock);
+    // if (num_splits != 1) pthread_mutex_unlock(density_lock);
 
     // if (arg_parser.get_bool_argument_value("debug")) {
     //   imshow("Dynamic Density", dynamic_img);
@@ -249,6 +326,8 @@ void* worker(void* arg) {
     //     break;
     //   }
     // }
+    // printf("[#] Thread %ld: finished execution at time : %f s\n",
+    // pid,get_time());
   }
 
   sem_wait(sem_exit);
@@ -258,7 +337,7 @@ void* worker(void* arg) {
 
 void run(runtime_params& params, density_t& density) {
   vector<Rect2d> cropping_rects;
-  vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
+  // vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
   vector<worker_params> thread_params;
 
   VideoCapture cap;
@@ -288,45 +367,54 @@ void run(runtime_params& params, density_t& density) {
   // Either run 4 threads doing the same thing but on diff data
   // Or storing pre-processed frames in some array and then supplying it to each
   // of 3 threads
-  int frames_processed = 0;
+  int frames_processed = 0, frame_div = -1;
+  bool video_split = params.split_video != 1;
+  int num_threads = video_split ? params.split_video : params.split_frame;
+  sem_t producer_ready, consumer_ready, sem_exit;
+  vector<density_t> density_store;
+
   density.resize(frame_count);
 
-  worker_params w_params;
-  w_params.params = &params;
-  w_params.density_store = &density;
+  worker_params w_params{
+      &params,         &frames_processed, &frame_div, &consumer_ready,
+      &producer_ready, &sem_exit,         &frame  };
+  // w_params.params = &params;
+  // w_params.density_store = &density;
 
-  sem_t producer_ready, consumer_ready, sem_exit;
-  auto density_lock = pthread_mutex_t();
+  // auto density_lock = pthread_mutex_t();
 
-  w_params.density_lock = &density_lock;
-  w_params.consumer_ready = &consumer_ready;
-  w_params.producer_ready = &producer_ready;
-  w_params.sem_exit = &sem_exit;
+  // w_params.density_lock = &density_lock;
+  // w_params.consumer_ready = &consumer_ready;
+  // w_params.producer_ready = &producer_ready;
+  // w_params.sem_exit = &sem_exit;
 
-  w_params.frames_processed = &frames_processed;
+  // w_params.frames_processed = &frames_processed;
 
   for (int i = 0; i < params.split_frame; i++) {
     auto new_w_param(w_params);
-    new_w_param.frame_get =
-        worker_params::frame_getter{&cropping_rects[i], bg_subs[i], &frame};
+    density_t density_div(frame_count);
+    density_store.push_back(density_div);
+
+    // new_w_param.bg_sub = bg_subs[i];
+    new_w_param.density_store = &density_store.back();
     thread_params.push_back(new_w_param);
   }
 
   producer_params prod_params{
-      &cap, &frame, &consumer_ready, &producer_ready, &sem_exit, 1, 1, &params};
-  bool video_split = params.split_video != 1;
-  int num_threads = video_split ? params.split_video : params.split_frame;
+      &cap,           &frame,      &consumer_ready,   &producer_ready,
+      &sem_exit,      num_threads, &frames_processed, &frame_div,
+      cropping_rects, &params};
 
-  prod_params.wait_for_threads = (video_split) ? 1 : num_threads;
-  prod_params.num_threads = num_threads;
+  // prod_params.wait_for_threads = (video_split) ? 1 : num_threads;
+  // prod_params.num_threads = num_threads;
   sem_init(&producer_ready, 0, 0);
   sem_init(&sem_exit, 0, 0);
-  sem_init(&consumer_ready, 0, (video_split) ? 1 : num_threads);
+  sem_init(&consumer_ready, 0, 1);
 
-  if (pthread_mutex_init(&density_lock, NULL) != 0) {
-    printf("[-] Mutex init has failed\n");
-    return;
-  }
+  // if (pthread_mutex_init(&density_lock, NULL) != 0) {
+  //   printf("[-] Mutex init has failed\n");
+  //   return;
+  // }
 
   pthread_t tid[num_threads], prod_thread;
   int ii = 0, error;
@@ -353,21 +441,30 @@ void run(runtime_params& params, density_t& density) {
   for (int ii = 0; ii < num_threads; ii++) {
     pthread_join(tid[ii], NULL);
   }
-  cout<<"[+] Consumer threads joined successfully"<<endl;
+  cout << "[+] Consumer threads joined successfully" << endl;
   if (!video_split) {
-    for (auto& v : density) {
-      v.first /= num_threads;
-      v.second /= num_threads;
+    for (int ii = 0; ii < frame_count; ii++) {
+      double x_sum = 0.0, y_sum = 0.0;
+      for (int j = 0; j < num_threads; j++) {
+        x_sum += density_store[j][ii].first;
+        y_sum += density_store[j][ii].second;
+      }
+      density[ii] = make_pair(x_sum / num_threads, y_sum / num_threads);
     }
+
+  } else {
+    density = density_store[0];
+    cout << density.size() << endl;
   }
 
   sem_destroy(&producer_ready);
   sem_destroy(&consumer_ready);
   sem_destroy(&sem_exit);
-  pthread_mutex_destroy(&density_lock);
+  // pthread_mutex_destroy(&density_lock);
 
   bar.finish();
   cap.release();
   cv::destroyAllWindows();
   start_points.clear();
+  bg_subs.clear();
 }

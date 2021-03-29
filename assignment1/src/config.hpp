@@ -24,7 +24,7 @@ typedef density_t result_t;
 extern vector<Point> start_points;
 
 struct runtime_params {
-  int skip_frames = 1;
+  int skip_frames = 0;
   bool sparse_optical_flow = false;
   bool calc_dynamic_density = false;
   Size resolution = base_resolution;
@@ -34,18 +34,17 @@ struct runtime_params {
 
 struct worker_params {
   runtime_params* params;
-  density_t* density_store;
   int* frames_processed;
+  int* frame_div;
   sem_t* consumer_ready;
   sem_t* producer_ready;
   sem_t* sem_exit;
-  struct frame_getter {
-    Rect2d* cropping_rect;
-    cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
-    Mat* frame_ptr;
-  };
-  frame_getter frame_get;
-  pthread_mutex_t* density_lock;
+  Mat* frame_ptr;
+
+  // vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
+  density_t* density_store;
+
+  // pthread_mutex_t* density_lock;
 };
 
 struct producer_params {
@@ -54,8 +53,11 @@ struct producer_params {
   sem_t* consumer_ready;
   sem_t* producer_ready;
   sem_t* sem_exit;
-  int wait_for_threads;
+  // int wait_for_threads;
   int num_threads;
+  int* frames_processed;
+  int* frame_div;
+  vector<Rect2d> cropping_rects;
   runtime_params* params;
 
 };
