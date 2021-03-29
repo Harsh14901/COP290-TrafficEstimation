@@ -4,6 +4,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv4/opencv2/opencv.hpp>
+#include <semaphore.h>
 
 using namespace std;
 using namespace cv;
@@ -27,7 +28,7 @@ struct runtime_params {
   bool sparse_optical_flow = false;
   bool calc_dynamic_density = false;
   Size resolution = base_resolution;
-  int split_frame = 1;
+  int split_frame = 2;
   int split_video = 1;  // Indicates number of threads to be used
 };
 
@@ -35,14 +36,27 @@ struct worker_params {
   runtime_params* params;
   density_t* density_store;
   int* frames_processed;
-  pthread_mutex_t* mutex_lock;
+  // pthread_mutex_t* mutex_lock;
+  sem_t* consumer_ready;
+  sem_t* producer_ready;
+  sem_t* sem_exit;
   struct frame_getter{
     Rect2d* cropping_rect;
     cv::Ptr<cv::BackgroundSubtractorMOG2> bg_sub;
-    VideoCapture* cap;
+    Mat* frame_ptr;
   };
   frame_getter frame_get;
   pthread_mutex_t* density_lock;
 
+};
+
+struct producer_params{
+  VideoCapture* cap_ptr;
+  Mat* frame_ptr;
+  sem_t* consumer_ready;
+  sem_t* producer_ready;
+  sem_t* sem_exit;
+  int wait_for_threads;
+  int num_threads;
 };
 #endif

@@ -120,6 +120,42 @@ void initialize_elements(VideoCapture& cap, runtime_params& params,
   bar.set_theme_line();
 }
 
+void* producer(void* arg) {
+  auto args = (struct producer_params*)arg;
+  auto cap = *(args->cap_ptr);
+  auto frame_ptr = args->frame_ptr;
+
+  int frame_idx = 0;
+  while (true) {
+
+    for (int i = 0; i < args->wait_for_threads; i++) {
+      sem_wait(args->consumer_ready);
+    }
+
+    bar.progress(frame_idx, frame_count);
+
+    Mat frame;
+    cap.read(frame);
+
+    *frame_ptr = frame;
+
+    for (int i = 0; i < args->wait_for_threads; i++) {
+      sem_post(args->producer_ready);
+    }
+    frame_idx++;
+    if (frame.empty()) {
+      break;
+    }
+  }
+
+  for (int i = 0; i < args->num_threads; i++) {
+    sem_post(args->producer_ready);
+    sem_post(args->sem_exit);
+  }
+  cout << "[#] Producer exiting" << endl;
+  pthread_exit(NULL);
+}
+
 void* worker(void* arg) {
   struct worker_params* args = (struct worker_params*)arg;
 
@@ -128,28 +164,38 @@ void* worker(void* arg) {
   auto num_threads = params->split_video;
   auto num_splits = params->split_frame;
   auto frames_processed = (num_splits == 1) ? args->frames_processed : &fp;
-  auto mutex_lock = args->mutex_lock;
+  // auto mutex_lock = args->mutex_lock;
+  auto consumer_ready = args->consumer_ready;
+  auto producer_ready = args->producer_ready;
+  auto sem_exit = args->sem_exit;
+
   auto density_lock = args->density_lock;
   auto bg_sub = args->frame_get.bg_sub;
   auto cropping_rect = *(args->frame_get.cropping_rect);
-  auto cap = *(args->frame_get.cap);
+  // auto cap = *(args->frame_get.cap);
+  auto frame_ptr = args->frame_get.frame_ptr;
 
-  // auto pid = pthread_self();
+  auto pid = pthread_self();
 
   Mat last_frame;
   while (true) {
     // if (num_threads != 1)
-    pthread_mutex_lock(mutex_lock);
+    // pthread_mutex_lock(mutex_lock);
 
     Mat frame, cropped_frame;
-    cap.read(frame);
+    sem_wait(producer_ready);
+    frame = *frame_ptr;
+    // cap.read(frame);
     int i = ++(*frames_processed);
-    bar.progress(i, frame_count);
+    sem_post(consumer_ready);
+
 
     // if (num_threads != 1)
-    pthread_mutex_unlock(mutex_lock);
+    // pthread_mutex_unlock(mutex_lock);
 
-    if (frame.empty()) {
+    if (frame.empty() || i > frame_count) {
+      printf("[#] Worker %ld breaking from loop\n", pid);
+      // break;
       break;
     }
 
@@ -160,6 +206,8 @@ void* worker(void* arg) {
     preprocess_frame(frame, params->resolution);
     crop_frame(frame, cropped_frame, cropping_rect);
 
+    // TODO : bg_sub is applied after cropping end points as well as cropping
+    // the frame if split_frame is used
     Mat fg_mask;
     bg_sub->apply(cropped_frame, fg_mask, learning_rate);
 
@@ -190,7 +238,6 @@ void* worker(void* arg) {
     } else {
       density_point = compute_density(fg_mask);
     }
-
     if (num_splits != 1) pthread_mutex_lock(density_lock);
 
     args->density_store->at(i).first += density_point.first;
@@ -209,14 +256,19 @@ void* worker(void* arg) {
     //     break;
     //   }
     // }
+    
+    
+  
   }
 
-  return NULL;
+  sem_wait(sem_exit);
+  cout << "Worker exiting: " << pid << endl;
+  pthread_exit(NULL);
 }
 
 void run(runtime_params& params, density_t& density) {
   vector<Rect2d> cropping_rects;
-  vector<VideoCapture> caps;
+  // vector<VideoCapture> caps;
   vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
   vector<worker_params> thread_params;
 
@@ -225,11 +277,11 @@ void run(runtime_params& params, density_t& density) {
   make_scaled_rects(params.split_frame, cropping_rects);
   initialize_elements(cap, params, bg_sub);
 
-  Mat fg_mask;
+  Mat fg_mask, frame;
   cout << "[+] Training BG subtractor ..." << endl;
   if (arg_parser.get_bool_argument_value("train")) {
     // TODO modify train_bgsub to take cropped frame
-    train_bgsub(bg_sub, cap, fg_mask, params.resolution);
+    // train_bgsub(bg_sub, cap, fg_mask, params.resolution);
   } else {
     for (int i = 0; i < params.split_frame; i++) {
       Mat cropped_bg_img;
@@ -243,10 +295,10 @@ void run(runtime_params& params, density_t& density) {
 
   cap.set(CAP_PROP_POS_FRAMES, 0);
 
-  for (int i = 0; i < params.split_frame; i++) {
-    auto new_cap(cap);
-    caps.push_back(new_cap);
-  }
+  // for (int i = 0; i < params.split_frame; i++) {
+  //   auto new_cap(cap);
+  //   caps.push_back(new_cap);
+  // }
 
   // For Multithreading, 2 approaches may be used:
   // Either run 4 threads doing the same thing but on diff data
@@ -259,66 +311,100 @@ void run(runtime_params& params, density_t& density) {
   w_params.params = &params;
   w_params.density_store = &density;
 
-  auto mutex_lock = pthread_mutex_t();
+  // auto mutex_lock = pthread_mutex_t();
+  sem_t producer_ready, consumer_ready, sem_exit;
   auto density_lock = pthread_mutex_t();
 
-  w_params.mutex_lock = &mutex_lock;
+  // w_params.mutex_lock = &mutex_lock;
   w_params.density_lock = &density_lock;
+  w_params.consumer_ready = &consumer_ready;
+  w_params.producer_ready = &producer_ready;
+  w_params.sem_exit = &sem_exit;
 
   w_params.frames_processed = &frames_processed;
 
   for (int i = 0; i < params.split_frame; i++) {
     auto new_w_param(w_params);
     new_w_param.frame_get =
-        worker_params::frame_getter{&cropping_rects[i], bg_subs[i], &caps[i]};
+        worker_params::frame_getter{&cropping_rects[i], bg_subs[i], &frame};
     thread_params.push_back(new_w_param);
   }
 
-  if (params.split_video == 1 && params.split_frame == 1) {
-    cout << "[+] Running in single threaded mode" << endl;
+  producer_params prod_params{
+      &cap, &frame, &consumer_ready, &producer_ready, &sem_exit, 1, 1};
+  // if (params.split_video == 1 && params.split_frame == 1) {
+  //   cout << "[+] Running in single threaded mode" << endl;
 
-    worker((void*)&thread_params[0]);
-  } else {
-    // TODO here split_video is given priority
-    bool video_split = params.split_video != 1;
-    int num_threads = video_split ? params.split_video : params.split_frame;
+  //   sem_init(&producer_ready, 0, 0);
+  //   sem_init(&consumer_ready, 0, 1);
+  //   auto err = pthread_create(&prod_thread, NULL, producer, (void
+  //   *)&prod_params); if(err != 0){
+  //     cout<<"[-] Cannot start producer thread"<<endl;
+  //     return;
+  //   }
 
-    if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
-      printf("[-] Mutex init has failed\n");
-      return;
-    }
+  //   worker((void*)&thread_params[0]);
+  //   pthread_join(prod_thread, NULL);
 
-    if (pthread_mutex_init(&density_lock, NULL) != 0) {
-      printf("[-] Mutex init has failed\n");
-      return;
-    }
+  // } else {
+  // TODO here split_video is given priority
+  bool video_split = params.split_video != 1;
+  int num_threads = video_split ? params.split_video : params.split_frame;
 
-    pthread_t tid[num_threads];
-    int error;
-    int ii = 0;
+  prod_params.wait_for_threads = (video_split) ? 1 : num_threads;
+  prod_params.num_threads = num_threads;
+  // if (pthread_mutex_init(&mutex_lock, NULL) != 0) {
+  //   printf("[-] Mutex init has failed\n");
+  //   return;
+  // }
+  sem_init(&producer_ready, 0, 0);
+  sem_init(&sem_exit, 0, 0);
+  sem_init(&consumer_ready, 0, (video_split) ? 1 : num_threads);
 
-    cout << "[+] Creating threads" << endl;
-    while (ii < num_threads) {
-      auto worker_args = (video_split) ? thread_params[0] : thread_params[ii];
-      error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&worker_args);
-      if (error != 0)
-        printf("[-] Thread can't be created :[%s]", strerror(error));
-      ii++;
-      cout << "[+] Created thread " << ii << endl;
-    }
-    for (int ii = 0; ii < num_threads; ii++) {
-      pthread_join(tid[ii], NULL);
-    }
-    if (!video_split) {
-      for (auto& v : density) {
-        v.first /= num_threads;
-        v.second /= num_threads;
-      }
-    }
-
-    pthread_mutex_destroy(&mutex_lock);
-    pthread_mutex_destroy(&density_lock);
+  if (pthread_mutex_init(&density_lock, NULL) != 0) {
+    printf("[-] Mutex init has failed\n");
+    return;
   }
+
+  pthread_t tid[num_threads], prod_thread;
+  int ii = 0;
+  int error;
+
+  error = pthread_create(&prod_thread, NULL, producer, (void*)&prod_params);
+  if (error != 0) {
+    cout << "[-] Cannot start producer thread, error code: " << to_string(error)
+         << endl;
+    return;
+  }
+
+  cout << "[+] Creating threads" << endl;
+  while (ii < num_threads) {
+    auto worker_args = (video_split) ? thread_params[0] : thread_params[ii];
+    error = pthread_create(&(tid[ii]), NULL, &worker, (void*)&worker_args);
+    if (error != 0)
+      printf("[-] Consumer thread can't be created :[%s]", strerror(error));
+    ii++;
+    cout << "[+] Created consumer thread " << ii << endl;
+  }
+
+  pthread_join(prod_thread, NULL);
+
+  for (int ii = 0; ii < num_threads; ii++) {
+    pthread_join(tid[ii], NULL);
+  }
+  if (!video_split) {
+    for (auto& v : density) {
+      v.first /= num_threads;
+      v.second /= num_threads;
+    }
+  }
+
+  // pthread_mutex_destroy(&mutex_lock);
+  sem_destroy(&producer_ready);
+  sem_destroy(&consumer_ready);
+  sem_destroy(&sem_exit);
+  pthread_mutex_destroy(&density_lock);
+  // }
 
   bar.finish();
   cap.release();
