@@ -44,10 +44,18 @@ int main(int argc, char* argv[]) {
   }
 
   auto method = stoi(arg_parser.get_argument_value("method"));
+  auto complete_anly = arg_parser.get_bool_argument_value("complete_analysis");
+  if(complete_anly){
+    complete_analysis(run);
+  }
   if (method != 0) {
     perform_analysis(run, method);
   } else {
-    auto params = runtime_params{};
+    runtime_params params;
+    params.read_config_file(arg_parser.get_argument_value("config"));
+
+    cout << "YO " << params.sparse_optical_flow << " " << params.resolution << endl;
+
     auto density = density_t();
 
     run(params, density);
@@ -62,11 +70,14 @@ bool handle_arguments(int argc, char* argv[]) {
   arg_parser.set_argument("input", "i", "./input_files/trafficvideo.mp4");
   arg_parser.set_argument("output", "o", "./output_files/density.csv");
   arg_parser.set_argument("method", "m", "0");
+  arg_parser.set_argument("config","c","./configs/config");
   arg_parser.set_standalone_argument("autoselect-points", "a");
   arg_parser.set_standalone_argument("debug", "d");
   arg_parser.set_standalone_argument("no-animation", "f");
   arg_parser.set_standalone_argument("skip-initial", "s");
   arg_parser.set_standalone_argument("train", "t");
+  arg_parser.set_standalone_argument("complete_analysis","y");
+
 
   return arg_parser.parse_arguments(argc, argv);
 }
@@ -296,7 +307,11 @@ void* worker(void* arg) {
       if (i < num_threads) {
         last_frame = frame;
       }
-      opticalFlow(last_frame, frame, new_opt);
+      if(params->sparse_optical_flow){
+        sparseOpticalFlow(last_frame,frame,fg_mask,new_opt,num_threads*params->skip_frames);
+      }else{
+        opticalFlow(last_frame, frame, new_opt);
+      }
 
       last_frame = frame;
       if (i < num_threads) {

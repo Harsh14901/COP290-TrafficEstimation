@@ -80,6 +80,65 @@ void preprocess_frame(Mat& frame, const Size& resolution) {
   crop_end_pts(temp, frame, resolution);
 }
 
+// Takes grayscale images as input
+void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_skip){
+  
+  
+  int frame_area = prvs.rows*prvs.cols;
+
+  vector<Point2f> p0, p1,p0r;
+  goodFeaturesToTrack(prvs, p0, 100, 0.3, 7, Mat(), 7, false, 0.04);
+
+
+  // calculate optical flow
+  vector<uchar> status;
+  vector<float> err;
+  TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
+
+  calcOpticalFlowPyrLK(prvs, next, p0, p1, status, err, Size(15,15), 2, criteria);
+  calcOpticalFlowPyrLK(next, prvs, p1, p0r, status, err, Size(15,15), 2, criteria); //Calculates in reverse order
+
+
+  vector<Point2f> good_points;
+
+  for(uint i = 0; i < p0.size(); i++)
+  {
+      if(status[i]!=1) continue;
+
+      float good_point_val = max(abs(p0r.at(i).y-p1.at(i).y),abs(p0r.at(i).x-p1.at(i).x));
+      if(good_point_val>1){
+
+        if(p1.at(i).y-p0.at(i).y>-4*frame_skip) continue;
+        good_points.push_back(p1[i]);
+      }
+
+  } 
+
+
+  dst = Mat(next.rows, next.cols, CV_8UC1, Scalar(0));
+
+  vector<vector<Point>> contours;
+  findContours(fg_mask, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
+
+  vector<vector<Point>> goodContours; 
+  for(vector<Point> cont : contours){
+    int tot = 1;
+    for(int i=0;i<good_points.size();i++){
+      int val = pointPolygonTest(cont,good_points.at(i),false);
+      if(val==-1) continue;
+      tot+=1;
+    }
+    if(tot>=4){
+      if(contourArea(cont)>0.5*frame_area) continue;
+      goodContours.push_back(cont);
+    }
+  }
+
+  fillPoly(dst,goodContours,Scalar(255));
+
+}
+
+
 void reduce_noise(Mat& fg_mask, const Mat& kernel) {
   Mat processed_img;
   // TODO: Change the number of iterations of the three ops below.

@@ -46,6 +46,7 @@ double time_execution(run_t f, runtime_params& params, density_t& density) {
   auto end = std::chrono::steady_clock::now();
   return std::chrono::duration<double>(end - start).count();
 }
+
 void analyze(run_t f, runtime_params& baseline_params,
              vector<runtime_params>& test_params, string out_file) {
   auto results = result_t();
@@ -133,4 +134,51 @@ void method5(run_t f) {
   // add_threads(8);
 
   analyze(f, baseline_params, test_params, "./output_files/split_frame.csv");
+}
+
+// void method2(run_t f) {
+//   auto baseline_params = runtime_params{};
+//   vector<runtime_params> test_params;
+
+//   auto add_threads = [&](int num) {
+//     test_params.push_back(baseline_params);
+//     test_params.back().split_frame = num;
+//   };
+
+//   add_threads(2);
+//   add_threads(4);
+//   // add_threads(6);
+//   // add_threads(8);
+
+//   analyze(f, baseline_params, test_params, "./output_files/split_frame.csv");
+// }
+
+void complete_analysis(run_t f){
+
+  runtime_params baseline_params;
+  vector<runtime_params> test_params;
+
+  int split_vids[] = {1,4,8};
+  int split_f[] = {1,2,4};
+  bool sparse[] = {false,true};
+  int resolutions[] = {1,3,5};
+  int skip_frame[] = {1,2,4};
+
+  for(int sv: split_vids){
+    for(int sf: split_f){
+      for(bool spa:sparse){
+        for (int res: resolutions){
+          for(int skf: skip_frame){
+            runtime_params rp;
+            rp.set_values(skf,spa,true,res,sf,sv);
+            test_params.push_back(rp);
+          }
+        }
+      }
+    }
+  }
+
+  analyze(f, test_params[0], test_params, "./output_files/complete_analysis.csv");
+
+
 }
