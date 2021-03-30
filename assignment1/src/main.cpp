@@ -304,7 +304,7 @@ void* worker(void* arg) {
     pair<double, double> density_point;
     if (params->calc_dynamic_density) {
       // TODO check if this block works
-      if (i < num_threads) {
+      if (last_frame.rows == 0) {
         last_frame = frame;
       }
       if(params->sparse_optical_flow){
