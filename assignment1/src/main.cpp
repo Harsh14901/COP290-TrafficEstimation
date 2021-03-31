@@ -274,6 +274,7 @@ void* worker(void* arg) {
     }
 
     if (i % (1 + params->skip_frames) != 0) {
+      args->density_store->at(i) = args->density_store->at(i-1);
       continue;
     }
     // if(num_threads != 1 || (num_threads == 1 && num_splits == 1)){

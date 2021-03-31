@@ -147,6 +147,7 @@ void method2(run_t f) {
   auto baseline_params = runtime_params{};
   vector<runtime_params> test_params;
 
+  baseline_params.calc_dynamic_density = true;
 
   test_params.push_back(baseline_params);
   test_params.back().sparse_optical_flow = true;
@@ -164,7 +165,7 @@ void complete_analysis(run_t f){
   int split_f[] = {1,2,4};
   bool sparse[] = {false,true};
   int resolutions[] = {1,3,5};
-  int skip_frame[] = {1,2,4};
+  int skip_frame[] = {0,1,3};
 
   for(int sv: split_vids){
     for(int sf: split_f){
