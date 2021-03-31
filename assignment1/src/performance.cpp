@@ -197,10 +197,11 @@ void complete_analysis(run_t f) {
   vector<runtime_params> test_params;
 
   int split_vids[] = {1, 4, 8};
-  int split_f[] = {1, 2, 4};
+  // int split_f[] = {1, 2, 4};  // We can rule this out for analysis
+  int split_f[] = {1};
   bool sparse[] = {false, true};
   int resolutions[] = {1, 3, 5};
-  int skip_frame[] = {0, 1, 3};
+  int skip_frame[] = {1, 3, 5};
 
   for (int sv : split_vids) {
     for (int sf : split_f) {
