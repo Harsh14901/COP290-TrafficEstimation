@@ -7,9 +7,9 @@ void perform_analysis(run_t f, int method) {
     case 1:
       method1(f);
       break;
-    // case 2:
-    //   method2(f);
-    //   break;
+    case 2:
+      method2(f);
+      break;
     case 3:
       method3(f);
       break;
@@ -37,7 +37,7 @@ double compute_utility(density_t& baseline_density, density_t& test_density) {
     auto diff = abs(test_diff - baseline_diff);
     utility += diff * diff;
   }
-  return utility;
+  return sqrt(utility);
 }
 
 double time_execution(run_t f, runtime_params& params, density_t& density) {
@@ -136,22 +136,16 @@ void method5(run_t f) {
   analyze(f, baseline_params, test_params, "./output_files/split_frame.csv");
 }
 
-// void method2(run_t f) {
-//   auto baseline_params = runtime_params{};
-//   vector<runtime_params> test_params;
+void method2(run_t f) {
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
 
-//   auto add_threads = [&](int num) {
-//     test_params.push_back(baseline_params);
-//     test_params.back().split_frame = num;
-//   };
 
-//   add_threads(2);
-//   add_threads(4);
-//   // add_threads(6);
-//   // add_threads(8);
+  test_params.push_back(baseline_params);
+  test_params.back().sparse_optical_flow = true;
 
-//   analyze(f, baseline_params, test_params, "./output_files/split_frame.csv");
-// }
+  analyze(f, baseline_params, test_params, "./output_files/sparse_optical.csv");
+}
 
 void complete_analysis(run_t f){
 
@@ -169,6 +163,9 @@ void complete_analysis(run_t f){
       for(bool spa:sparse){
         for (int res: resolutions){
           for(int skf: skip_frame){
+            if(sv!=1 && sf!=1){
+              continue;
+            }
             runtime_params rp;
             rp.set_values(skf,spa,true,res,sf,sv);
             test_params.push_back(rp);

@@ -83,17 +83,24 @@ void preprocess_frame(Mat& frame, const Size& resolution) {
 // Takes grayscale images as input
 void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_skip){
   
-  
+
+  dst = Mat(next.rows, next.cols, CV_8UC1, Scalar(0));
+
   int frame_area = prvs.rows*prvs.cols;
 
   vector<Point2f> p0, p1,p0r;
   goodFeaturesToTrack(prvs, p0, 100, 0.3, 7, Mat(), 7, false, 0.04);
 
+  if(p0.size()==0){
+    return; 
+  }
 
   // calculate optical flow
   vector<uchar> status;
   vector<float> err;
   TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
+
+  cout << p0.size() << endl;
 
   calcOpticalFlowPyrLK(prvs, next, p0, p1, status, err, Size(15,15), 2, criteria);
   calcOpticalFlowPyrLK(next, prvs, p1, p0r, status, err, Size(15,15), 2, criteria); //Calculates in reverse order
@@ -115,7 +122,6 @@ void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_sk
   } 
 
 
-  dst = Mat(next.rows, next.cols, CV_8UC1, Scalar(0));
 
   vector<vector<Point>> contours;
   findContours(fg_mask, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);

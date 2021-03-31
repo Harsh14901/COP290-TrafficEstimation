@@ -54,7 +54,6 @@ int main(int argc, char* argv[]) {
     runtime_params params;
     params.read_config_file(arg_parser.get_argument_value("config"));
 
-    cout << "YO " << params.sparse_optical_flow << " " << params.resolution << endl;
 
     auto density = density_t();
 
