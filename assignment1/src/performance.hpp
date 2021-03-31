@@ -1,9 +1,7 @@
 #ifndef PERFORMANCE_H
 #define PERFORMANCE_H
-#include <bits/stdc++.h>
 
 #include <config.hpp>
-#include <opencv2/opencv.hpp>
 #include <util/util.hpp>
 using namespace std;
 

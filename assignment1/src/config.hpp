@@ -20,6 +20,8 @@ const auto dot_color = Scalar(255, 0, 0), line_color = Scalar(255, 0, 0),
 const auto original_name = "original", transformed_name = "transformed",
            cropped_name = "cropped";
 const auto base_resolution = Size(1920, 1080);
+extern int frame_rate, frame_count;
+
 typedef vector<pair<double, double>> density_t;
 typedef vector<pair<string, string>> result_t;
 
@@ -30,8 +32,9 @@ struct runtime_params {
   bool sparse_optical_flow = false;
   bool calc_dynamic_density = false;
   Size resolution = base_resolution;
-  int split_frame = 1;
-  int split_video = 1;  // Indicates number of threads to be used
+  int split_frame = 1;  // Indicates number of splits to be made for each frame
+  int split_video = 1;  // Indicates number of threads to be used for
+                        // consecutively processing frames
 
   void set_values(int skip_frames, bool sparse_optical_flow,
                   bool calc_dynamic_density, int res_scale_factor,
@@ -49,11 +52,7 @@ struct worker_params {
   sem_t* producer_ready;
   sem_t* sem_exit;
   Mat* frame_ptr;
-
-  // vector<cv::Ptr<cv::BackgroundSubtractorMOG2>> bg_subs;
   density_t* density_store;
-
-  // pthread_mutex_t* density_lock;
 };
 
 struct producer_params {
@@ -62,7 +61,6 @@ struct producer_params {
   sem_t* consumer_ready;
   sem_t* producer_ready;
   sem_t* sem_exit;
-  // int wait_for_threads;
   int num_threads;
   int* frames_processed;
   int* frame_div;

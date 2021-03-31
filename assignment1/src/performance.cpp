@@ -126,6 +126,18 @@ void method1(run_t f) {
   analyze(f, baseline_params, test_params, "./output_files/skip_frames");
 }
 
+void method2(run_t f) {
+  auto baseline_params = runtime_params{};
+  vector<runtime_params> test_params;
+
+  baseline_params.calc_dynamic_density = true;
+
+  test_params.push_back(baseline_params);
+  test_params.back().sparse_optical_flow = true;
+
+  analyze(f, baseline_params, test_params, "./output_files/sparse_optical");
+}
+
 void method3(run_t f) {
   auto baseline_params = runtime_params{};
   vector<runtime_params> test_params;
@@ -180,18 +192,6 @@ void method5(run_t f) {
   analyze(f, baseline_params, test_params, "./output_files/split_frame");
 }
 
-void method2(run_t f) {
-  auto baseline_params = runtime_params{};
-  vector<runtime_params> test_params;
-
-  baseline_params.calc_dynamic_density = true;
-
-  test_params.push_back(baseline_params);
-  test_params.back().sparse_optical_flow = true;
-
-  analyze(f, baseline_params, test_params, "./output_files/sparse_optical");
-}
-
 void complete_analysis(run_t f) {
   runtime_params baseline_params;
   vector<runtime_params> test_params;
@@ -211,7 +211,7 @@ void complete_analysis(run_t f) {
             if (sv != 1 && sf != 1) {
               continue;
             }
-            if(res*sf > 8){
+            if (res * sf > 8) {
               continue;
             }
             runtime_params rp;

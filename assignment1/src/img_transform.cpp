@@ -127,11 +127,11 @@ void make_scaled_rects(int splits, vector<Rect2d> &rects) {
       break;
     case 6:
       rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0 / 3.0});
-      rects.push_back(Rect2d{1.0/2.0, 0.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 0.0, 1.0 / 2.0, 1.0 / 3.0});
       rects.push_back(Rect2d{0.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
-      rects.push_back(Rect2d{1.0/2.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
       rects.push_back(Rect2d{0.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
-      rects.push_back(Rect2d{1.0/2.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0 / 2.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
       break;
     default:
       rects.push_back(Rect2d{0, 0, 1.0, 1.0});
@@ -144,6 +144,6 @@ void crop_frame(Mat &frame, Mat &dst, Rect2d &scaled_rect) {
   double cols = (double)frame.cols;
 
   auto crop_rect = Rect2d{scaled_rect.x * cols, scaled_rect.y * rows,
-                        scaled_rect.width * cols, scaled_rect.height * rows};
+                          scaled_rect.width * cols, scaled_rect.height * rows};
   dst = frame(crop_rect);
 }
