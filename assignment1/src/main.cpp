@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
   auto method = stoi(arg_parser.get_argument_value("method"));
   auto complete_anly = arg_parser.get_bool_argument_value("complete_analysis");
-  if(complete_anly){
+  if (complete_anly) {
     complete_analysis(run);
   }
   if (method != 0) {
@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
   } else {
     runtime_params params;
     params.read_config_file(arg_parser.get_argument_value("config"));
-
 
     auto density = density_t();
 
@@ -69,14 +68,13 @@ bool handle_arguments(int argc, char* argv[]) {
   arg_parser.set_argument("input", "i", "./input_files/trafficvideo.mp4");
   arg_parser.set_argument("output", "o", "./output_files/density.csv");
   arg_parser.set_argument("method", "m", "0");
-  arg_parser.set_argument("config","c","./configs/config");
+  arg_parser.set_argument("config", "c", "./configs/config");
   arg_parser.set_standalone_argument("autoselect-points", "a");
   arg_parser.set_standalone_argument("debug", "d");
   arg_parser.set_standalone_argument("no-animation", "f");
   arg_parser.set_standalone_argument("skip-initial", "s");
   arg_parser.set_standalone_argument("train", "t");
-  arg_parser.set_standalone_argument("complete_analysis","y");
-
+  arg_parser.set_standalone_argument("complete_analysis", "y");
 
   return arg_parser.parse_arguments(argc, argv);
 }
@@ -192,7 +190,8 @@ void* producer(void* arg) {
 
     if (*(args->frame_div) == 0) {
       cap.read(frame);
-      if (!frame.empty() && params->split_video == 1) {
+      if (!frame.empty() && params->split_video == 1 &&
+          params->split_frame != 1) {
         preprocess_frame(frame, params->resolution);
       }
     }
@@ -203,7 +202,8 @@ void* producer(void* arg) {
     } else {
       *frame_ptr = frame;
     }
-    // printf("[=] Producer, frames processed are: %d\n", *(args->frames_processed));
+    // printf("[=] Producer, frames processed are: %d\n",
+    // *(args->frames_processed));
 
     // printf("[=] Producer posting as ready : %f s\n", get_time());
 
@@ -251,7 +251,8 @@ void* worker(void* arg) {
   Mat last_frame;
   while (true) {
     Mat frame;
-    // printf("[#] Thread %ld: waiting for producer at time : %f s\n", pid,get_time());
+    // printf("[#] Thread %ld: waiting for producer at time : %f s\n",
+    // pid,get_time());
 
     sem_wait(producer_ready);
     // printf("[#] Thread %ld: producer ready : %f s\n", pid,get_time());
@@ -274,6 +275,7 @@ void* worker(void* arg) {
     }
 
     if (i % (1 + params->skip_frames) != 0) {
+      args->density_store->at(i) = args->density_store->at(i - 1);
       continue;
     }
     // if(num_threads != 1 || (num_threads == 1 && num_splits == 1)){
@@ -283,7 +285,8 @@ void* worker(void* arg) {
     // crop_frame(frame, cropped_frame, cropping_rect);
 
     // }
-    if(params->split_video != 1){
+    if (params->split_video != 1 ||
+        (params->split_frame == 1 && params->split_video == 1)) {
       preprocess_frame(frame, params->resolution);
     }
     // TODO : bg_sub is applied after cropping end points as well as cropping
@@ -306,9 +309,10 @@ void* worker(void* arg) {
       if (last_frame.rows == 0) {
         last_frame = frame;
       }
-      if(params->sparse_optical_flow){
-        sparseOpticalFlow(last_frame,frame,fg_mask,new_opt,num_threads*params->skip_frames);
-      }else{
+      if (params->sparse_optical_flow) {
+        sparseOpticalFlow(last_frame, frame, fg_mask, new_opt,
+                          num_threads * params->skip_frames);
+      } else {
         opticalFlow(last_frame, frame, new_opt);
       }
 
@@ -391,9 +395,9 @@ void run(runtime_params& params, density_t& density) {
 
   density.resize(frame_count);
 
-  worker_params w_params{
-      &params,         &frames_processed, &frame_div, &consumer_ready,
-      &producer_ready, &sem_exit,         &frame  };
+  worker_params w_params{&params,         &frames_processed, &frame_div,
+                         &consumer_ready, &producer_ready,   &sem_exit,
+                         &frame};
   // w_params.params = &params;
   // w_params.density_store = &density;
 
