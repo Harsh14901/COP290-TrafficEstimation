@@ -11,6 +11,7 @@
 #include <opencv2/opencv.hpp>
 #include <performance.hpp>
 #include <util/util.hpp>
+#include "database_searc.hpp"
 
 #include "util/arg_parser.hpp"
 #include "util/tqdm.h"
@@ -42,6 +43,7 @@ int main(int argc, char* argv[]) {
     show_usage(argv[0]);
     return -1;
   }
+
 
   auto method = stoi(arg_parser.get_argument_value("method"));
   auto complete_anly = arg_parser.get_bool_argument_value("complete_analysis");
