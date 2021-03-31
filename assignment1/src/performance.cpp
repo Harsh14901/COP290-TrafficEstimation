@@ -173,9 +173,9 @@ void method5(run_t f) {
   };
 
   add_threads(2);
+  add_threads(3);
   add_threads(4);
-  // add_threads(6);
-  // add_threads(8);
+  add_threads(6);
 
   analyze(f, baseline_params, test_params, "./output_files/split_frame");
 }

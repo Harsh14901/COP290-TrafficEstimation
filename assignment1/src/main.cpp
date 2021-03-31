@@ -190,8 +190,7 @@ void* producer(void* arg) {
 
     if (*(args->frame_div) == 0) {
       cap.read(frame);
-      if (!frame.empty() && params->split_video == 1 &&
-          params->split_frame != 1) {
+      if (!frame.empty() && params->split_video == 1) {
         preprocess_frame(frame, params->resolution);
       }
     }
@@ -285,8 +284,7 @@ void* worker(void* arg) {
     // crop_frame(frame, cropped_frame, cropping_rect);
 
     // }
-    if (params->split_video != 1 ||
-        (params->split_frame == 1 && params->split_video == 1)) {
+    if (params->split_video != 1) {
       preprocess_frame(frame, params->resolution);
     }
     // TODO : bg_sub is applied after cropping end points as well as cropping
