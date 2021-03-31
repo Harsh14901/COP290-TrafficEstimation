@@ -174,6 +174,9 @@ void complete_analysis(run_t f){
             if(sv!=1 && sf!=1){
               continue;
             }
+            if(res*sf > 8){
+              continue;
+            }
             runtime_params rp;
             rp.set_values(skf,spa,true,res,sf,sv);
             test_params.push_back(rp);
