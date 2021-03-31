@@ -75,5 +75,6 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp"
-    }
+    },
+    "python.pythonPath": "/usr/bin/python3"
 }
