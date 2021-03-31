@@ -29,4 +29,14 @@ void runtime_params::read_config_file(string filename){
 }
 
 
+void runtime_params::print_params(){
+
+    cout << "Skip Frames " << this->skip_frames << endl;
+    cout << "SparseOptical " << this->sparse_optical_flow << endl;
+    cout << "IsCalculatingDynamicDesnity " << this->calc_dynamic_density << endl;
+    cout << "Resolution " << this->resolution << endl;
+    cout << "Split Frame " << this->split_frame << endl;
+    cout << "Split Video " << this->split_video << endl;
+}
+
   

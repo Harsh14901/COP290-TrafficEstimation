@@ -37,6 +37,7 @@ struct runtime_params {
   void set_values(int skip_frames,bool sparse_optical_flow,bool calc_dynamic_density,int res_scale_factor,int split_frame,int split_video);
 
   void read_config_file(string filename);
+  void print_params();
 
 };
 

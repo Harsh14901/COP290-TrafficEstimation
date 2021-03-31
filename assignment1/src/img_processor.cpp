@@ -100,8 +100,6 @@ void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_sk
   vector<float> err;
   TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
 
-  cout << p0.size() << endl;
-
   calcOpticalFlowPyrLK(prvs, next, p0, p1, status, err, Size(15,15), 2, criteria);
   calcOpticalFlowPyrLK(next, prvs, p1, p0r, status, err, Size(15,15), 2, criteria); //Calculates in reverse order
 

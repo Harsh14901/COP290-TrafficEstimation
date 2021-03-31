@@ -56,7 +56,14 @@ void analyze(run_t f, runtime_params& baseline_params,
   printf("[#] BASELINE TIME: %f\n", baseline_time);
   results.push_back(make_pair(0, baseline_time));
 
+  int i = 0;
+
   for (auto& test_param : test_params) {
+    
+    i++;
+    cout << "Params for Trial: " << i << " are: " << endl;
+    test_param.print_params();
+
     auto test_density = density_t();
     auto test_time = time_execution(f, test_param, test_density);
     auto utility = compute_utility(baseline_density, test_density);
@@ -151,6 +158,7 @@ void complete_analysis(run_t f){
 
   runtime_params baseline_params;
   vector<runtime_params> test_params;
+
 
   int split_vids[] = {1,4,8};
   int split_f[] = {1,2,4};
