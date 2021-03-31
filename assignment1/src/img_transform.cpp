@@ -111,14 +111,27 @@ void make_scaled_rects(int splits, vector<Rect2d> &rects) {
   switch (splits) {
     case 2:
 
-      rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0});
-      rects.push_back(Rect2d{1.0 / 2.0, 0.0, 1.0 / 2.0, 1.0});
+      rects.push_back(Rect2d{0.0, 0.0, 1.0, 1.0 / 2.0});
+      rects.push_back(Rect2d{0.0, 1.0 / 2.0, 1.0, 1.0 / 2.0});
+      break;
+    case 3:
+      rects.push_back(Rect2d{0.0, 0.0, 1.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{0.0, 1.0 / 3.0, 1.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{0.0, 2.0 / 3.0, 1.0, 1.0 / 3.0});
       break;
     case 4:
-      rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0 / 2.0});
-      rects.push_back(Rect2d{1.0 / 2.0, 0.0, 1.0 / 2.0, 1.0 / 2.0});
-      rects.push_back(Rect2d{0.0, 1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0});
-      rects.push_back(Rect2d{1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0, 1.0 / 2.0});
+      rects.push_back(Rect2d{0.0, 0.0, 1.0, 1.0 / 4.0});
+      rects.push_back(Rect2d{0.0, 1.0 / 4.0, 1.0, 1.0 / 4.0});
+      rects.push_back(Rect2d{0.0, 2.0 / 4.0, 1.0, 1.0 / 4.0});
+      rects.push_back(Rect2d{0.0, 3.0 / 4.0, 1.0, 1.0 / 4.0});
+      break;
+    case 6:
+      rects.push_back(Rect2d{0.0, 0.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0/2.0, 0.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{0.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0/2.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{0.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
+      rects.push_back(Rect2d{1.0/2.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 3.0});
       break;
     default:
       rects.push_back(Rect2d{0, 0, 1.0, 1.0});
