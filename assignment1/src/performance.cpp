@@ -135,15 +135,14 @@ void method3(run_t f) {
     test_params.back().resolution = Size(width, height);
   };
 
-  // add_res(1920, 1080);
-  // add_res(1366, 768);
-  // add_res(1536, 864);
-  // add_res(1440, 900);
-  // add_res(640, 360);
-  // add_res(1600, 900);
-  add_res(1024, 768);
-  // add_res(1280, 1024);
+  add_res(1536, 864);
+  add_res(1600, 900);
+  add_res(1440, 900);
+  add_res(1366, 768);
+  add_res(1280, 1024);
   add_res(1280, 720);
+  add_res(1024, 768);
+  add_res(640, 360);
 
   analyze(f, baseline_params, test_params, "./output_files/resolution");
 }
