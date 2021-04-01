@@ -113,15 +113,9 @@ void sparse_optical_flow(Mat& prvs, Mat& next, Mat& fg_mask, Mat& dst,
     float good_point_val =
         max(abs(p0r.at(i).y - p1.at(i).y), abs(p0r.at(i).x - p1.at(i).x));
     if (good_point_val > 1) {
-      if (p1.at(i).y - p0.at(i).y > -4 * frame_skip) continue;
+      if (p1.at(i).y - p0.at(i).y > -4 * sqrt(frame_skip)) continue;
       good_points.push_back(p1[i]);
     }
-  }
-
-        if(p1.at(i).y-p0.at(i).y>-4*sqrt(frame_skip)) continue;
-        good_points.push_back(p1[i]);
-      }
-
   } 
 
 
