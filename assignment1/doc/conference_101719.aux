@@ -33,8 +33,8 @@
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {III}Metrics}{1}{section.3}\protected@file@percent }
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {IV}Methods}{1}{section.4}\protected@file@percent }
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Frame Sub-Sampling}{2}{subsection.4.1}\protected@file@percent }
-\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces We observe, no suitable advantage is visible on skipping more than 6 frames.}}{2}{figure.1}\protected@file@percent }
-\newlabel{skf_evt}{{1}{2}{We observe, no suitable advantage is visible on skipping more than 6 frames}{figure.1}{}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces We observe, no suitable advantage is visible on skipping more than 5 frames.}}{2}{figure.1}\protected@file@percent }
+\newlabel{skf_evt}{{1}{2}{We observe, no suitable advantage is visible on skipping more than 5 frames}{figure.1}{}}
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Image Resolution Reduction}{2}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Multi-Threading}{2}{subsection.4.3}\protected@file@percent }
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {IV-C}1}Spatial}{2}{subsubsection.4.3.1}\protected@file@percent }
@@ -43,21 +43,27 @@
 \@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces We observe to get the least time, 4 threads are needed.}}{2}{figure.3}\protected@file@percent }
 \newlabel{smt_evt}{{3}{2}{We observe to get the least time, 4 threads are needed}{figure.3}{}}
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {IV-C}2}Temporal}{2}{subsubsection.4.3.2}\protected@file@percent }
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Sparse Optical Flow}{2}{subsection.4.4}\protected@file@percent }
 \@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces No sufficient advantage is seen after increasing parallel threads to more than four}}{3}{figure.4}\protected@file@percent }
 \newlabel{tmt_pvt}{{4}{3}{No sufficient advantage is seen after increasing parallel threads to more than four}{figure.4}{}}
-\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Sparse Optical Flow}{3}{subsection.4.4}\protected@file@percent }
 \@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces While decrease in runtime is substantial, we observe error is substantial.}}{3}{figure.5}\protected@file@percent }
 \newlabel{sof_pvt}{{5}{3}{While decrease in runtime is substantial, we observe error is substantial}{figure.5}{}}
 \@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Dynamic Tuning}{3}{subsection.4.5}\protected@file@percent }
-\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Here z-axis denotes the number of temporal threads used.}}{3}{figure.6}\protected@file@percent }
-\newlabel{ca_evp}{{6}{3}{Here z-axis denotes the number of temporal threads used}{figure.6}{}}
-\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The parameters corresponding to bottom left portion of graph are best to use when on a low computational budget}}{3}{figure.7}\protected@file@percent }
-\newlabel{ca_rve}{{7}{3}{The parameters corresponding to bottom left portion of graph are best to use when on a low computational budget}{figure.7}{}}
-\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {V}Trade-Off Analysis}{3}{section.5}\protected@file@percent }
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces High Error is observed at points with high dynamic density}}{3}{figure.6}\protected@file@percent }
+\newlabel{sparse_frame_error}{{6}{3}{High Error is observed at points with high dynamic density}{figure.6}{}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Here z-axis denotes the number of temporal threads used.}}{3}{figure.7}\protected@file@percent }
+\newlabel{ca_evp}{{7}{3}{Here z-axis denotes the number of temporal threads used}{figure.7}{}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The parameters corresponding to bottom left portion of graph are best to use when on a low computational budget}}{3}{figure.8}\protected@file@percent }
+\newlabel{ca_rve}{{8}{3}{The parameters corresponding to bottom left portion of graph are best to use when on a low computational budget}{figure.8}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {V}Trade-Off Analysis}{4}{section.5}\protected@file@percent }
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Skip Frames (blue) ensure maximum improvement in runtime without loss in much error.}}{4}{figure.9}\protected@file@percent }
+\newlabel{plot_all}{{9}{4}{Skip Frames (blue) ensure maximum improvement in runtime without loss in much error}{figure.9}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {VI}Conclusion}{4}{section.6}\protected@file@percent }
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Error is high wherever traffic density is high}}{4}{figure.10}\protected@file@percent }
+\newlabel{low_res_err}{{10}{4}{Error is high wherever traffic density is high}{figure.10}{}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{References}{4}{section*.1}\protected@file@percent }
 \abx@aux@refcontextdefaultsdone
 \abx@aux@defaultrefcontext{0}{b4}{nty/global//global/global}
 \abx@aux@defaultrefcontext{0}{b1}{nty/global//global/global}
 \abx@aux@defaultrefcontext{0}{b5}{nty/global//global/global}
 \abx@aux@defaultrefcontext{0}{b2}{nty/global//global/global}
-\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {VI}Conclusion}{4}{section.6}\protected@file@percent }
-\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{References}{4}{section*.1}\protected@file@percent }

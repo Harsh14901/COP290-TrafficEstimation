@@ -62,18 +62,18 @@ accuracy on the computer vision based traffic monitoring systems.
 % \end{IEEEkeywords}
 
 \section{Introduction}
-Recent Developement of Smart Cities, has resulted in increase in systems capable of monitoring
-road traffic for both environmental analysis, and better traffic management. This requires solutions such as embedded systems,
-doing live inference from camera feed of CCTV cameras, deployed across many highways, expressways and road junctions in city.
-However these embedded systems, are limited on computational capacity, and may not have a large source of energy(mostly relying on solar energy).
-Also based on the time of day and day of the year, the varying temperatures, add a restriction on how much computational power they can spend without getting overheated.
-In this report we investigate the various computational parameters, that can be tweaked, such that the computational load on embedded systems decreases, while maintaining
-the performance as much as possible. Since we do not have Ground Truth Data,  we create a baseline model, which practically takes the largest time, but is assumed to be most accurate.
-All other models are evaluated against this baseline model. We use Mean Squared Error to analyze the tradeoff between time taken and utility of model.
+The recent development of Smart Cities has resulted in an increase in systems capable of monitoring
+road traffic for environmental analysis and better traffic management. This requires solutions such as embedded systems,
+performing live inference from camera feed of CCTV cameras, deployed across many highways, expressways, and road junctions in the city.
+However, these embedded systems are limited on computational capacity and may not have a significant energy source (primarily relying on solar energy).
+Also, based on the time of day and day of the year, the varying temperatures add a restriction on how much computational power they can spend without getting overheated.
+In this report, we investigate the various computational parameters that can be tweaked, such that the computational load on embedded systems decreases while maintaining
+the performance as much as possible. Since we do not have Ground Truth Data,  we create a baseline model, which practically takes the most significant time but is assumed to be the most accurate.
+All other models are evaluated against this baseline model. We use Mean Squared Error to analyze the trade-off between the time taken and utility of the model.
 The following sections are divided as follows:
-In the next section we will discuss the basic algorithm of model developed by us to calculate traffic density. This is followed by a section on the metrics used and our
-approach to study the effect of runtime and utility. Further in the section, we develop a framework, that can assist these systems to take dynamic decisions based on ambient conditions.
-In Section 5 we discuss the Trade-Off Analysis, after which we conclude in Section 6.
+In the next section, we will discuss the basic algorithm of the model developed by us to calculate traffic density. This is followed by a section on the metrics used and our
+approach to study the effect of runtime and utility. Further in the section, we develop a framework that can assist these systems to make dynamic decisions based on ambient conditions.
+In Section 5, we discuss the Trade-Off Analysis, after which we conclude in Section 6.
 
 
 % \begin{figure}[htbp]
@@ -85,20 +85,20 @@ In Section 5 we discuss the Trade-Off Analysis, after which we conclude in Secti
 
 \section{Algorithm}
     
-We run our algorithm on a real footage from CCTV camera installed at Lajpatnagar junction in New Delhi. \cite{b1}
-The camera has a wide range and also doesn't gives a birds eye view. To solve this, we initally crop each of the frame and correct its perspective so as to get a birds eye view. 
+We run our algorithm on real footage from a CCTV camera installed at Lajpatnagar junction in New Delhi. \cite{b1}
+The camera has a wide range and also doesn't gives a bird's eye view. To solve this, we initially crop each of the frames and correct its perspective to get a bird's eye view. 
 For perspective transform, we use OpenCV's `findHomography' and `warpPerspective' algorithm. \cite{b2}
-The region to be cropped for a junction is fixed (given the orientation of camera) and is taken from the user or is hardcoded.
-Then, the background from this image is removed using MOG2 Algorithm. The Algorithm is either trained on empty photo of road or using first few frames of the input video.
-The image is then processed through a series of dilations and erosions, after which we perform binary thresholding. This creates a map of all the vehicles, and using this we calculate the {\bfseries{queue traffic density}}. 
-In order to calculate the dynamic density, we deploy two models, one uses Gunner Farneback's algorithm for solving optical flow equation, while other is Lucas-Kanade's optical flow algorithm. \cite{b4} \cite{b5}
-While the former one is slower than the latter, it gives better results. These algorithms can be switched depeding on the computational power available.
+The region to be cropped for a junction is fixed (given the camera orientation) and is taken from the user or is hardcoded.
+Then, the background from this image is removed using the MOG2 Algorithm. The Algorithm is either trained on an empty photo of the road or using the first few input video frames.
+The image is then processed through a series of dilations and erosions, after which we perform binary thresholding. This creates a map of all the vehicles, and using this, we calculate the {\bfseries{queue traffic density}}. 
+To calculate the dynamic density, we deploy two models; one uses Gunner Farneback's algorithm for solving optical flow equations, while the other is Lucas-Kanade's optical flow algorithm. \cite{b4} \cite{b5}
+While the former one is slower than the latter, it gives better results. These algorithms can be switched depending on the computational power available.
 
 \section{Metrics}
 
-To define our utility we calculate the Mean Squared Error from the baseline set of parameters. This error is average over the time of video. Now more is the error, higher is the utility and vice-versa.
-To define the runtime, we evaluate the time taken by given video(Size: 382s). To ensure results are not varied due to other tasks on computer, 
-program runs are made on Linux Environment without explicitly running any additional software. For each set of parameters, 3 runs are performed, and their average is taken to further ensure that results are not pertubed by external factors.
+To define our utility, we calculate the Mean Squared Error from the baseline set of parameters. This error is averaged over the time of the video. Now more is the error, lower is the utility, and vice-versa.
+To define the runtime, we evaluate the time taken by the given video(Size: 382s). To ensure results are not varied due to other computer tasks, 
+program runs are made on Linux Environment without explicitly running any additional software. For each set of parameters, three runs are performed, and their average is taken to further ensure that external factors do not perturb results.
 \section{Methods}
 
 To study the effect of runtime and utility we consider five optimizations:
@@ -115,15 +115,14 @@ utility is observed and plotted. Analysis of each of these methods is included i
 
 \subsection{Frame Sub-Sampling}
 
-In this Method, we only take every xth frame of the video for processing. For the skipped frames, we interpolate 
-the density values from previous frames. We observe that as we increase the the number of frames skipped, the time decreases, however the error continously increases [See Fig.].
-However we also note that change in runtime is not much after skip frames is made equal to four, since loading frames from video starts having larger relative effect.
-Thus we can say for given model, setting skip\_frames \= 6, is best 
+In this method, we only take every xth frame of the video for processing. For the skipped frames, we interpolate the density values from previous frames. We observe that as we increase the number of frames skipped, the time decreases, however the error continuously increases [See Fig~\ref{skf_evt}].
+However, we also note that change in runtime is not much after skip frames are made equal to four since loading frames from video starts having a larger relative effect.
+Thus we can say for the given model, setting skip\_frames \= 5, is best 
 when running on limited performance, as it is able to improve the runtime by a factor of $\approxeq$ 2.5.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/plot_skip_frames.png}}
-\caption{We observe, no suitable advantage is visible on skipping more than 6 frames.}
+\caption{We observe, no suitable advantage is visible on skipping more than 5 frames.}
 \label{skf_evt} 
 \end{figure}
 
@@ -131,27 +130,26 @@ when running on limited performance, as it is able to improve the runtime by a f
 \subsection{Image Resolution Reduction}
 
 In this Method, we reduce the resolution of each frame by a factor. The conversion is done in realtime, and all the processing takes place on this downscaled image.
-% We observe a similar nature of graph as in frame subsampling, except of the fact, that this time error is much more significant. [See Fig.]
-Unlike frame subsampling, we observe a linearly decreasing graph. However the difference in error in both of these graphs is significant, with frame subsampling outperforming the current method.
+Unlike frame subsampling, we observe a linearly decreasing graph. However, the difference in error in both of these graphs is significant, with frame subsampling outperforming the current method.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_resolution.png}}
+\centerline{\includegraphics[scale=0.55]{plots/plot_resolution.png}}
 \caption{An almost linear increase in utility error with decrease runtime is observed}
 \label{res_evt} 
 \end{figure}
     
 
 \subsection{Multi-Threading}
-Initially our code was single threaded executing statements sequentially, but there are lot of independent processes that can be executed in parallel to improve the execution time.
-We introduced multi threading in our code to improve the performance by utilising all cores of a multi-core processor. We have implemented a single producer, multiconsumer threading model using \verb|semaphores|.
-A single producer reads frame from the input video file and places the frame into a shared buffer. In a multi-threaded environment several consumer threads are spawned which wait for the
-producer and start processing the frame. \verb|semaphores| are used for thread synchronisation and to prevent race conditions among threads for shared memory.
+Initially, our code was single-threaded, executing statements sequentially, but many independent processes can be executed in parallel to improve the execution time.
+We introduced multi-threading in our code to improve the performance by utilizing all cores of a multi-core processor. We have implemented a single producer, multiconsumer threading model using \verb|semaphores|.
+A single producer reads the frame from the input video file and places it into a shared buffer. In a multi-threaded environment, several consumer threads are spawned, which wait for the
+producer and start processing the frame. \verb|semaphores| are used for thread synchronization and to prevent race conditions among threads for shared memory.
 
 \subsubsection{Spatial} 
-We split a frame into segments and assigned each segment to an independent thread. Splitting a frame reduces the matrix size required for each computation and reduces the
-average processing time of a thread. However this method also introduces considerable amount of errors since there is no thread that operates on the borders.
-Also we observe that increasing threads upto 4 has some advantage, however after that the runtime also starts growing. One of the reasons is that maintaining large number of threads,
-has its own overhead. Moreover, since the sizes of images become small, the runtime advantage of vectorised algorithms is lost.
+We split a frame into segments and assigned each segment to an independent thread. Splitting a frame reduces the matrix size required for each computation and lowers the
+thread's average processing time. However, this method also introduces a considerable amount of errors since no thread operates on the borders.
+Also, we observe that increasing threads up to 4 has some advantages; however, the runtime also starts growing. One of the reasons is that maintaining a large number of threads
+has its own overhead. Moreover, since the sizes of images become small, the runtime advantage of vectorized algorithms is lost.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/plot_split_frame.png}}
@@ -161,8 +159,8 @@ has its own overhead. Moreover, since the sizes of images become small, the runt
 
 
 \subsubsection{Temporal}
-We split the work temporally by giving consecutive frames to different threads for processing. The analysis was parametrized by the number of threads used for processing. This method proved quite effective and practically feasible. As the number of threads were increased the processing time decreased without any significant loss in utility.
-However there was no runtime improvements after more than 4 parallel threads were used. The reason for this is that processors have limit on number of threads they can use in parallel, and OpenCV algorithms being already heavily vectorised, the saturation is reached early.
+We split the work temporally by giving consecutive frames to different threads for processing. The analysis was parameterized by the number of threads used for processing. This method proved quite effective and practically feasible. As the number of threads was increased, the processing time decreased without any significant loss in utility.
+However, there was no runtime improvements after more than four parallel threads were used. Because processors have a limit on the number of threads they can use in parallel, and OpenCV algorithms are already heavily vectorized, the saturation is reached early.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/plot_split_video.png}}
@@ -172,10 +170,10 @@ However there was no runtime improvements after more than 4 parallel threads wer
 
 \subsection{Sparse Optical Flow}
 
-In this method we implement the sparse optical flow method for dynamic density calculation instead of the dense optical flow method.
-We observe a significant reduction in time taken(Roughly 1.8 times). However the error observed is higher than the other methods.
-The reason for this behaviour is partly due to the ability of sparse method to give zero output when there is actually no movement in road. This is in contrast to dense optical flow method,
-where there is always some noise. Thus it is fair to say the error from GroundTruth is sufficiently less while using sparse optical flow, and the time gain is also good. Thus it is a good method to keep computational load in check.
+In this method, we implement the sparse optical flow method for dynamic density calculation instead of the dense optical flow method.
+We observe a significant reduction in time taken(Roughly 1.8 times). However, the error observed is higher than the other methods.
+This behavior is partly due to the sparse method's ability to give zero output when there is actually no movement in the road. This is in contrast to the dense optical flow method,
+where there is always some noise. Thus it is fair to say the error from GroundTruth is sufficiently less while using sparse optical flow, and the time gain is also good. Thus it is an excellent method to keep the computational load in check.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/plot_sparse_optical.png}}
@@ -183,14 +181,20 @@ where there is always some noise. Thus it is fair to say the error from GroundTr
 \label{sof_pvt} 
 \end{figure}
 
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_sparse_dense.png}}
+\caption{High Error is observed at points with high dynamic density}
+\label{sparse_frame_error} 
+\end{figure}
+
 \subsection{Dynamic Tuning}
 
-For embedded systems deployed in production it is necessary that they adapt to the enviornmental conditions. Also traffic monitoring systems should adjust to the traffic conditions,
-i.e when traffic is low, these embedded systems may move to low power mode. 
-However, it should be noted that facilitating the same is a non-trivial problem. The reason is that different parameters do not correlate with each other in terms of error. Also no mathematical function exists to correctly map given error to runtime or vice-versa.
-To make this dynamic tuning possible, we run the program on wide combinations of tunable parameters and create a databse from the same.
-Now using a simple c++ function call, based on the error/time constraint, the best metric satisfying the given constraints with the best performance/least error is returned. This best metric is searched from the databse we have created. For example in a real system, a temperature sensor can send information to tune down performance by x\% and 
-the c++ function, will return the parameters to be used for least error.
+For embedded systems deployed in production, they must adapt to the environmental conditions. Also, traffic monitoring systems should adjust to the traffic conditions,
+i.e, when traffic is low, these embedded systems may move to low power mode. 
+However, it should be noted that facilitating the same is a non-trivial problem. The reason is that different parameters do not correlate with each other in terms of error. Also, no mathematical function exists to map given error to runtime or vice-versa correctly.
+To make this dynamic tuning possible, we run the program on vast combinations of tunable parameters and create a database from the same.
+Using a simple c++ function call, based on the error/time constraint, the best metric satisfying the given conditions with the best performance/least error is returned. This best metric is searched from the databse we have created. For example, in a real system, a temperature sensor can send information to tune down performance by x\% and 
+the c++ function will return the parameters to be used for the least error.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/Error_vs_Params.png}}
@@ -206,21 +210,36 @@ the c++ function, will return the parameters to be used for least error.
     
 \section{Trade-Off Analysis}
 
-For the various methods, we observe that all have their own advantages. However we note that Frame subsampling is able to reduce the computational load significantly, while seeing the least decrease in error.
-Also while the temporal multi-threading is able to reduce runtime with almost no error, it is still computationally expensive, because of use of multithreading. At the same time multithreading's full advantage is not 
-observed as OpenCV algorithms are already vectorised and optimised, leaving little scope for improvements in user created threads.
-In this report, we also studied the net effect of adjusting various parameters. We observe that parameters are not additive. For example effect of sparse optical flow on lower resolution in terms of time is negligible, however it induces much more absolute error than when on high-res images.
-Infact, the best compute friendly parameters are without sparse optical flow [See Fig. 7].
-Overall we observe choosing the right set of parameters, can decrease computational time significantly (as high as 8-9 times) with minimal error.
+For the various methods, we observe that all have their own advantages. However, we note that Frame subsampling can reduce the computational load significantly while seeing the smallest decrease in error.
+Also, while temporal multi-threading can reduce runtime with almost no error, it is still computationally expensive because of multithreading. At the same time, multithreading's full advantage is not 
+observed as OpenCV algorithms are already vectorized and optimized, leaving little scope for improvements in user-created threads.
+In this report, we also studied the net effect of adjusting various parameters. We observe that parameters are not additive. For example impact of sparse optical flow on lower resolution in terms of time is negligible, however, it induces much more absolute error than when on high-res images.
+In fact, the best compute-friendly parameters are without sparse optical flow [See Fig.~\ref{ca_rve}].
+We also observe that error is maximum during transition zones when either green light turns red or vice-versa. Or in other words, the error is proportional to the queue density, however measuring error relatively, it's roughly the same for the whole video sequence. 
+Overall we observe choosing the right set of parameters can decrease computational time significantly (as high as 8-9 times) with minimal error.
 
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[scale=0.3]{plots/plot_all.png}}
+\caption{Skip Frames (blue) ensure maximum improvement in runtime without loss in much error.}
+\label{plot_all} 
+\end{figure}
+
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_lowres_error.png}}
+\caption{Error is high wherever traffic density is high}
+\label{low_res_err} 
+\end{figure}
 % Graph of all methods combined(eVt) goes here
 
 \section{Conclusion}
 
 In this report, we have studied the effect of tuning parameters on runtime parameters for real-time computer vision based traffic monitoring system.
-We see most methods are able to reduce the runtime significantly, with a small penalty in accuracy.
-We observe that while some methods(frame subsampling), are able to outperform other methods in almost all cases, to improve the overall runtime, right combination of multiple methods is needed.
-However, if only one method is to be used, adjusting frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in scale of few seconds and thus even decreasing video to sat 2 FPS, cannot hurt the calculations.
+We see most methods are able to reduce the runtime significantly, with a minor penalty in the accuracy.
+We observe that while some methods(frame subsampling) can outperform other methods in almost all cases, to improve the overall runtime, the right combination of multiple methods is needed.
+However, if only one method is to be used, adjusting frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in a scale of few seconds, and thus even decreasing the video frame rate to 2 FPS cannot hurt the calculations.
+Overall, we conclude that naive models can be improved substantially by suitable optimizations, making it possible for real-time inference even in embedded systems.
 
 
 
@@ -414,11 +433,11 @@ heading=bibintoc,
 title={References}
 ] %Prints the entire bibliography with the titel "Whole bibliography"
 
-% \begin{flushleft}
+\begin{flushleft}
     
-% \end{flushleft}
+\end{flushleft}
 
-% \clearpage
+\clearpage
 
 %Filters bibliography
 % \printbibliography[title={References}]
