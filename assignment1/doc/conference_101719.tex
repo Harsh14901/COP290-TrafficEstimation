@@ -87,17 +87,17 @@ In Section 5, we discuss the Trade-Off Analysis, after which we conclude in Sect
     
 We run our algorithm on real footage from a CCTV camera installed at Lajpatnagar junction in New Delhi. \cite{b1}
 The camera has a wide range and also doesn't gives a bird's eye view. To solve this, we initially crop each of the frames and correct its perspective to get a bird's eye view. 
-For perspective transform, we use OpenCV's `findHomography' and `warpPerspective' algorithm. \cite{b2}
+For perspective transform, we use OpenCV's \verb|findHomography| and \verb|warpPerspective| algorithm. \cite{b2}
 The region to be cropped for a junction is fixed (given the camera orientation) and is taken from the user or is hardcoded.
-Then, the background from this image is removed using the MOG2 Algorithm. The Algorithm is either trained on an empty photo of the road or using the first few input video frames.
-The image is then processed through a series of dilations and erosions, after which we perform binary thresholding. This creates a map of all the vehicles, and using this, we calculate the {\bfseries{queue traffic density}}. 
-To calculate the dynamic density, we deploy two models; one uses Gunner Farneback's algorithm for solving optical flow equations, while the other is Lucas-Kanade's optical flow algorithm. \cite{b4} \cite{b5}
-While the former one is slower than the latter, it gives better results. These algorithms can be switched depending on the computational power available.
+Then, the background from this image is removed using the \verb|MOG2| algorithm. The algorithm can be trained on an empty photo of the road or using the first few input video frames.
+The image is then processed through a series of dilations and erosions, after which we perform binary thresholding. This creates a map of all the vehicles, and helps in calculation of {\bfseries{queue traffic density}}. 
+We have deployed two models for \textbf{dynamic density} calculation; one uses Gunner Farneback's algorithm \cite{b4} for solving optical flow equations, while the other is Lucas-Kanade's optical flow algorithm. \cite{b5}
+While the former is slower, it yields better results. These algorithms can be switched depending on the computational power available.
 
 \section{Metrics}
 
-To define our utility, we calculate the Mean Squared Error from the baseline set of parameters. This error is averaged over the time of the video. Now more is the error, lower is the utility, and vice-versa.
-To define the runtime, we evaluate the time taken by the given video(Size: 382s). To ensure results are not varied due to other computer tasks, 
+Utility error for a given set of test parameters is defined as the mean squared error of densities with respect to the baseline parameters. The error sum is averaged over the entire length of the video. The definition implies greater the error, lesser is the utility and vice versa.
+The runtime for a set of parameters is defined as the execution time for processing the video file with the test parameter as input. To ensure results are not varied due to other computer tasks, 
 program runs are made on Linux Environment without explicitly running any additional software. For each set of parameters, three runs are performed, and their average is taken to further ensure that external factors do not perturb results.
 \section{Methods}
 
@@ -115,9 +115,9 @@ utility is observed and plotted. Analysis of each of these methods is included i
 
 \subsection{Frame Sub-Sampling}
 
-In this method, we only take every xth frame of the video for processing. For the skipped frames, we interpolate the density values from previous frames. We observe that as we increase the number of frames skipped, the time decreases, however the error continuously increases [See Fig~\ref{skf_evt}].
-However, we also note that change in runtime is not much after skip frames are made equal to four since loading frames from video starts having a larger relative effect.
-Thus we can say for the given model, setting skip\_frames \= 5, is best 
+In this method, we only take every $x^{th}$ frame of the video for processing. For the skipped frames, we interpolate the density values from previous frames. We observe that as we increase the number of frames skipped, the time decreases, however the error continuously increases [See Fig~\ref{skf_evt}].
+However, we also note that runtime does not change much after skipping more than four frames possibly because loading frames from video starts having a larger relative effect.
+Thus we can say for the given model, setting \verb|skip_frames| to 5, is best 
 when running on limited performance, as it is able to improve the runtime by a factor of $\approxeq$ 2.5.
 
 \begin{figure}[htbp]
@@ -129,7 +129,7 @@ when running on limited performance, as it is able to improve the runtime by a f
 
 \subsection{Image Resolution Reduction}
 
-In this Method, we reduce the resolution of each frame by a factor. The conversion is done in realtime, and all the processing takes place on this downscaled image.
+In this method, we reduce the resolution of each frame by a factor. The conversion is done in realtime, and all the processing takes place on this downscaled image.
 Unlike frame subsampling, we observe a linearly decreasing graph. However, the difference in error in both of these graphs is significant, with frame subsampling outperforming the current method.
 
 \begin{figure}[htbp]
@@ -171,9 +171,9 @@ However, there was no runtime improvements after more than four parallel threads
 \subsection{Sparse Optical Flow}
 
 In this method, we implement the sparse optical flow method for dynamic density calculation instead of the dense optical flow method.
-We observe a significant reduction in time taken(Roughly 1.8 times). However, the error observed is higher than the other methods.
+We observe a significant reduction in time taken (roughly 1.8 times). However, the error observed is higher than the other methods.
 This behavior is partly due to the sparse method's ability to give zero output when there is actually no movement in the road. This is in contrast to the dense optical flow method,
-where there is always some noise. Thus it is fair to say the error from GroundTruth is sufficiently less while using sparse optical flow, and the time gain is also good. Thus it is an excellent method to keep the computational load in check.
+where there is always some noise. Sparse optical flow yields sufficiently low errors with respect to GroundTruth, and improved runtime. Hence it is an excellent method to keep the computational load in check.
 
 \begin{figure}[htbp]
 \centerline{\includegraphics{plots/plot_sparse_optical.png}}
@@ -190,10 +190,10 @@ where there is always some noise. Thus it is fair to say the error from GroundTr
 \subsection{Dynamic Tuning}
 
 For embedded systems deployed in production, they must adapt to the environmental conditions. Also, traffic monitoring systems should adjust to the traffic conditions,
-i.e, when traffic is low, these embedded systems may move to low power mode. 
+i.e, when traffic is low, these embedded systems must switch to low power mode. 
 However, it should be noted that facilitating the same is a non-trivial problem. The reason is that different parameters do not correlate with each other in terms of error. Also, no mathematical function exists to map given error to runtime or vice-versa correctly.
-To make this dynamic tuning possible, we run the program on vast combinations of tunable parameters and create a database from the same.
-Using a simple c++ function call, based on the error/time constraint, the best metric satisfying the given conditions with the best performance/least error is returned. This best metric is searched from the databse we have created. For example, in a real system, a temperature sensor can send information to tune down performance by x\% and 
+To make this dynamic tuning possible, we executed the program on vast combinations of tunable parameters and created a database from the same.
+Using a simple c++ function call, based on the error/time constraint, the best metric satisfying the given conditions with the best performance/least error is returned. This best metric is searched from the databse we have created. For example, in a real system, a temperature sensor can send information to tune down performance by $x\%$ and 
 the c++ function will return the parameters to be used for the least error.
 
 \begin{figure}[htbp]
@@ -210,10 +210,10 @@ the c++ function will return the parameters to be used for the least error.
     
 \section{Trade-Off Analysis}
 
-For the various methods, we observe that all have their own advantages. However, we note that Frame subsampling can reduce the computational load significantly while seeing the smallest decrease in error.
-Also, while temporal multi-threading can reduce runtime with almost no error, it is still computationally expensive because of multithreading. At the same time, multithreading's full advantage is not 
+For the various methods, we observe that all have their own advantages. However, we note that frame subsampling can reduce the computational load significantly with the smallest decrease in error.
+While temporal multi-threading reduces runtime with no significant error, it is computationally expensive due to multithreading. At the same time, multithreading's full advantage is not 
 observed as OpenCV algorithms are already vectorized and optimized, leaving little scope for improvements in user-created threads.
-In this report, we also studied the net effect of adjusting various parameters. We observe that parameters are not additive. For example impact of sparse optical flow on lower resolution in terms of time is negligible, however, it induces much more absolute error than when on high-res images.
+In this report, we also studied the net effect of adjusting various parameters. We observe that parameters are not additive. For example impact of sparse optical flow on lower resolution in terms of time is negligible, however, it induces greater absolute error than on high-res images.
 In fact, the best compute-friendly parameters are without sparse optical flow [See Fig.~\ref{ca_rve}].
 We also observe that error is maximum during transition zones when either green light turns red or vice-versa. Or in other words, the error is proportional to the queue density, however measuring error relatively, it's roughly the same for the whole video sequence. 
 Overall we observe choosing the right set of parameters can decrease computational time significantly (as high as 8-9 times) with minimal error.
@@ -238,7 +238,7 @@ Overall we observe choosing the right set of parameters can decrease computation
 In this report, we have studied the effect of tuning parameters on runtime parameters for real-time computer vision based traffic monitoring system.
 We see most methods are able to reduce the runtime significantly, with a minor penalty in the accuracy.
 We observe that while some methods(frame subsampling) can outperform other methods in almost all cases, to improve the overall runtime, the right combination of multiple methods is needed.
-However, if only one method is to be used, adjusting frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in a scale of few seconds, and thus even decreasing the video frame rate to 2 FPS cannot hurt the calculations.
+However, if oa single method is used, adjusting frame subsampling to improve runtime is the best choice. Since traffic densities change at a scale of few seconds, decreasing the processing frame rate to 2 FPS will not affect the calculations much.
 Overall, we conclude that naive models can be improved substantially by suitable optimizations, making it possible for real-time inference even in embedded systems.
 
 
