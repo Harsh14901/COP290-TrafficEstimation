@@ -145,7 +145,7 @@ void* worker(void* arg) {
       }
       if (params->sparse_optical_flow) {
         sparse_optical_flow(last_frame, frame, fg_mask, new_opt,
-                          num_threads * params->skip_frames);
+                          num_threads * (params->skip_frames + 1));
       } else {
         opticalFlow(last_frame, frame, new_opt);
       }
