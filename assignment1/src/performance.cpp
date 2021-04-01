@@ -60,11 +60,10 @@ double compute_utility(density_t& baseline_density, density_t& test_density) {
   int n = baseline_density.size();
 
   for (int i = 0; i < n; i++) {
-    auto baseline_diff =
-        abs(baseline_density[i].first - baseline_density[i].second);
-    auto test_diff = abs(test_density[i].first - test_density[i].second);
-    auto diff = abs(test_diff - baseline_diff);
-    utility += diff * diff;
+
+    auto diff = abs(baseline_density[i].first - test_density[i].first);
+    auto opt_diff = abs(baseline_density[i].second - test_density[i].second);
+    utility += diff * diff + opt_diff*opt_diff;
   }
   return sqrt(utility);
 }

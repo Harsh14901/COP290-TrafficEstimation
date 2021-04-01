@@ -26,9 +26,9 @@ typedef vector<pair<string, string>> result_t;
 extern vector<Point> start_points;
 
 struct runtime_params {
-  int skip_frames = 0;
+  int skip_frames = 1;
   bool sparse_optical_flow = false;
-  bool calc_dynamic_density = false;
+  bool calc_dynamic_density = true;
   Size resolution = base_resolution;
   int split_frame = 1;
   int split_video = 1;  // Indicates number of threads to be used
