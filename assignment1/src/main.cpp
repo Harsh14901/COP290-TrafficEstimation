@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 }
 
 bool handle_arguments(int argc, char* argv[]) {
-  arg_parser.set_argument("input", "i", "./input_files/trafficvideo.mp4");
+  arg_parser.set_argument("input", "i", "./input_files/cut.mp4");
   arg_parser.set_argument("output", "o", "./output_files/density.csv");
   arg_parser.set_argument("method", "m", "0");
   arg_parser.set_argument("config", "c", "./configs/config");
