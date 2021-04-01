@@ -41,6 +41,8 @@ Options:
 	-s, --skip-initial 		Skip initial selection of points
 	-q, --quick 		Output a quick result by skipping frames
 	-t, --train-bg 		Auto train the background of video
+	-m, --method            Runtime analysis method {1,2,3,4,5}
+	-y, --complete_analysis                 Run a comprehensive analysis of the various runtime parameters
 
 
 ```
@@ -53,6 +55,8 @@ Options:
 6. `-s, --skip-initial`: This flag will skip the initial process of selecting the points to transform the perspective. This causes the program to take up default points which are currently hardcoded.
 7. `-q, --quick`: This flag processes every third frame instead of the original FPS. This decreases the time taken to generate the output by a fraction of 3. **Note:** On a *i7* intel processor the program took 10 minutes to generate the output for a 6 minute video at full FPS. When this option was enabled the process completed in 3.5 minutes with only minor differences in the plot produced.
 8. `-t, --train-bg`: This option auto trains the background of the input video using some starting frames. By default the file `./input_files/empty.jpg` is used for background subtraction.
+9. `-m --method`: This option runs program on various parameters and plots the utility error vs runtime graph. The 5 options indicates the 5 different parameters that will be individually tweaked in each case.
+10. `-y --complete_analysis`: Runs a complete analysis by running model on 54 different set of parameters, and creates a database containing error, runtime for each set.
 
 To run the application with any of the command line flags specify it in the `args` parameter of `make run`
 For example 
