@@ -1,11 +1,11 @@
 # Fdb version 3
-["biber conference_101719"] 1617247272 "conference_101719.bcf" "conference_101719.bbl" "conference_101719" 1617248447
-  "conference_101719.bcf" 1617248445 101753 4ab54c42f6d4adf5addb48bd5d3b6444 "pdflatex"
+["biber conference_101719"] 1617247272 "conference_101719.bcf" "conference_101719.bbl" "conference_101719" 1617249881
+  "conference_101719.bcf" 1617249880 101753 4ab54c42f6d4adf5addb48bd5d3b6444 "pdflatex"
   "sample.bib" 1617209516 11641 c9bf376e285780b069e2e22345889c2a ""
   (generated)
   "conference_101719.bbl"
   "conference_101719.blg"
-["pdflatex"] 1617248441 "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.tex" "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.pdf" "conference_101719" 1617248447
+["pdflatex"] 1617249877 "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.tex" "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.pdf" "conference_101719" 1617249881
   "C:/Users/Pranjal/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1602265321 10010376 061584805870746d5fe61eba9ae43743 ""
   "C:/Users/Pranjal/AppData/Local/MiKTeX/pdftex/config/pdftex.map" 1610913229 1378246 e4c27aaed2842497b963e0dcaf003c33 ""
   "D:/Program Files/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458473887 4993 80dc9bab7f31fb78a000ccfed0e27cab ""
@@ -108,13 +108,13 @@
   "D:/Program Files/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "D:/Program Files/MiKTeX/tex/latex/xcolor/xcolor.sty" 1463135581 57049 34128738f682d033422ca125f82e5d62 ""
   "IEEEtran.cls" 1617209516 288304 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "conference_101719.aux" 1617248445 6418 0b470ec52936406f831f8ef1119809b8 "pdflatex"
+  "conference_101719.aux" 1617249880 6418 2d3c70b1a804a80f62db6fd067b7800a "pdflatex"
   "conference_101719.bbl" 1617247290 4609 9562a53250c426ebbb68774c2c1a21a3 "biber conference_101719"
-  "conference_101719.out" 1617248445 794 2530904b41f120f137ab8c3edb5acdd5 "pdflatex"
-  "conference_101719.run.xml" 1617248446 2426 3a3fcd66d9530e496f36d631554c0353 "pdflatex"
-  "conference_101719.tex" 1617248432 31897 cf3def2a9d5232fcee0058a38dbec3fb ""
-  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.aux" 1617248445 6418 0b470ec52936406f831f8ef1119809b8 ""
-  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.tex" 1617248432 31897 cf3def2a9d5232fcee0058a38dbec3fb ""
+  "conference_101719.out" 1617249880 794 2530904b41f120f137ab8c3edb5acdd5 "pdflatex"
+  "conference_101719.run.xml" 1617249880 2426 3a3fcd66d9530e496f36d631554c0353 "pdflatex"
+  "conference_101719.tex" 1617249871 33690 f00e19cd31a0c83663aebb16c17a551d ""
+  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.aux" 1617249880 6418 2d3c70b1a804a80f62db6fd067b7800a ""
+  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.tex" 1617249871 33690 f00e19cd31a0c83663aebb16c17a551d ""
   "plots/CompleteAnalysis_rVe.png" 1617248432 10946 7aed63defe0b8d5d308055850350127d ""
   "plots/Error_vs_Params.png" 1617247896 52617 dbb25622731be1b5e98db7fb21a6ad6d ""
   "plots/plot_resolution_eVt.png" 1617246879 9322 46fc3f4db907b4ff49677dea094e7367 ""
@@ -123,11 +123,11 @@
   "plots/plot_split_frame_eVt.png" 1617246360 11731 fd32cbb14acf402873da9481e1137f8e ""
   "plots/plot_split_video_pVt.png" 1617246502 9034 b810925ff54e620b228dace70a1ba215 ""
   (generated)
-  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.pdf"
-  "conference_101719.out"
-  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.log"
   "conference_101719.pdf"
-  "conference_101719.run.xml"
-  "conference_101719.bcf"
-  "conference_101719.aux"
+  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.log"
   "conference_101719.log"
+  "conference_101719.aux"
+  "conference_101719.bcf"
+  "conference_101719.out"
+  "e:/Users/Pranjal/OneDrive - IIT Delhi/Sem4_private/COP290/Conference-LaTeX-template_10-17-19/conference_101719.pdf"
+  "conference_101719.run.xml"

@@ -206,11 +206,23 @@ the c++ function, will return the parameters to be used for least error.
     
 \section{Trade-Off Analysis}
 
-Trade Off Analysis Goes Here
+For the various methods, we observe that all have their own advantages. However we note that Frame subsampling is able to reduce the computational load significantly, while seeing the least decrease in error.
+Also while the temporal multi-threading is able to reduce runtime with almost no error, it is still computationally expensive, because of use of multithreading. At the same time multithreading's full advantage is not 
+observed as OpenCV algorithms are already vectorised and optimised, leaving little scope for improvements in user created threads.
+In this report, we also studied the net effect of adjusting various parameters. We observe that parameters are not additive. For example effect of sparse optical flow on lower resolution in terms of time is negligible, however it induces much more absolute error than when on high-res images.
+Infact, the best compute friendly parameters are without sparse optical flow [See Fig. 7].
+Overall we observe choosing the right set of parameters, can decrease computational time significantly (as high as 8-9 times) with minimal error.
+
+% Graph of all methods combined(eVt) goes here
 
 \section{Conclusion}
 
-Conclusion Goes Here
+In this report, we have studied the effect of tuning parameters on runtime parameters for real-time computer vision based traffic monitoring system.
+We see most methods are able to reduce the runtime significantly, with a small penalty in accuracy.
+We observe that while some methods(frame subsampling), are able to outperform other methods in almost all cases, to improve the overall runtime, right combination of multiple methods is needed.
+However, if only one method is to be used, adjustign frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in scale of few seconds and thus even decreasing video to sat 2 FPS, cannot hurt the calculations.
+
+
 
 % \section{Inherent Ethical Issues in deep networks}
 
