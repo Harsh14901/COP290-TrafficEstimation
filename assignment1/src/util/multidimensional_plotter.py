@@ -46,7 +46,14 @@ def three_d_plots(data):
 
         ax.set_xlabel('Frame Sampling')
         ax.set_ylabel('Resolution Scaling')
-        ax.set_zlabel('Multi-Threading')      
+        ax.set_zlabel('Multi-Threading')  
+
+
+        for xx, yy, zz in zip(x,y,z):
+            label = '(%d, %d, %d)' % (xx, yy, zz)
+            ax.text(xx, yy, zz, label,size=6)
+
+
         if i==0:
             img = ax.scatter(x, y, z, c=c_rt, cmap=plt.hot())
             fig.colorbar(img)
