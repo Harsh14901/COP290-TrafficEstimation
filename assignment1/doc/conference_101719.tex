@@ -118,13 +118,28 @@ utility is observed and plotted. Analysis of each of these method is included in
 In this Method, we only take every xth frame of the video for processing. For the skipped frames, we interpolate 
 the density values from previous frames. We observe that as we increase the the number of frames skipped, the time decreases, however the error continously increases [See Fig.].
 However we also note that change in runtime is not much after skip frames is made equal to four, since loading frames from video starts having larger relative effect.
-Thus we can say for given model, setting skip\_frames \= 4, is best 
-when running on limited performance, as it is able to improve the runtime by a factor of x.
+Thus we can say for given model, setting skip\_frames \= 6, is best 
+when running on limited performance, as it is able to improve the runtime by a factor of $\approxeq$ 2.5.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_skip_frames_eVt.png}}
+\caption{We observe no suitable advantage on skipping more than 6 frames is observed.}
+\label{skf_evt} 
+\end{figure}
+
 
 \subsection{Image Resolution Reduction}
 
 In this Method, we reduce the resolution of each frame by a factor. The conversion is done in realtime, and all the processing takes place on this downscaled image.
-We observe a similar nature of graph as in frame subsampling, except of the fact, that this time error is much more significant. [See Fig.]
+% We observe a similar nature of graph as in frame subsampling, except of the fact, that this time error is much more significant. [See Fig.]
+Unlike frame subsampling, we observe a linearly decreasing graph. However the difference in error in both of these graphs is significant, with frame subsampling outperforming the resolution method.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_resolution_eVt.png}}
+\caption{An almost linear increase in utility error with decrease runtime is observed}
+\label{res_evt} 
+\end{figure}
+    
 
 \subsection{Multi-Threading}
 Initially our code was single threaded executing statements sequentially, but there are lot of independent processes that can be executed in parallel to improve the execution time.
@@ -132,19 +147,41 @@ We introduced multi threading in our code to improve the performance by utilisin
 A single producer reads frame from the input video file and places the frame into a shared buffer. In a multi-threaded environment several consumer threads are spawned which wait for the
 producer and start processing the frame. \verb|semaphores| are used for thread synchronisation and to prevent race conditions among threads for shared memory.
 
-\subsubsection{Spatial}
+\subsubsection{Spatial} 
 We split a frame into segments and assigned each segment to an independent thread. Splitting a frame reduces the matrix size required for each computation and reduces the
 average processing time of a thread. However this method also introduces considerable amount of errors since there is no thread that operates on the borders.
+Also we observe that increasing threads upto 4 has some advantage, however after that the runtime also starts growing. One of the reasons is that maintaining large number of threads,
+has its own overhead. Moreover, since the sizes of images become small, the runtime advantage of vectorised algorithms is lost.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_split_frame_eVt.png}}
+\caption{We observe to get the least time, 4 threads are needed.}
+\label{smt_evt} 
+\end{figure}
+
 
 \subsubsection{Temporal}
 We split the work temporally by giving consecutive frames to different threads for processing. The analysis was parametrized by the number of threads used for processing. This method proved quite effective and practically feasible. As the number of threads were increased the processing time decreased without any significant loss in utility.
+However there was no runtime improvements after more than 4 parallel threads were used. The reason for this is that processors have limit on number of threads they can use in parallel, and OpenCV algorithms being already heavily vectorised, the saturation is reached early.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_split_video_pVt.png}}
+\caption{No sufficient advantage is seen after increasing parallel threads to more than four}
+\label{tmt_pvt} 
+\end{figure}
 
 \subsection{Sparse Optical Flow}
 
 In this method we implement the sparse optical flow method for dynamic density calculation instead of the dense optical flow method.
-We observe a significant reduction in time taken(Roughly 2.5 times). However the error observed is higher than the other methods.
+We observe a significant reduction in time taken(Roughly 1.8 times). However the error observed is higher than the other methods.
 The reason for this behaviour is partly due to the ability of sparse method to give zero output when there is actually no movement in road. This is in contrast to dense optical flow method,
 where there is always some noise. Thus it is fair to say the error from GroundTruth is sufficiently less while using sparse optical flow, and the time gain is also good. Thus it is a good method to keep computational load in check.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/plot_sparse_optical_eVt.png}}
+\caption{While decrease in runtime is substantial, we observe error is substantial.}
+\label{sof_pvt} 
+\end{figure}
 
 \subsection{Dynamic Tuning}
 
@@ -155,6 +192,18 @@ To make this dynamic tuning possible, we run the program on wide combinations of
 Now using a simple c++ function call, based on the error/time constraint, the best metric satisfying the given constraints with the best performance/least error is returned. This best metric is searched from the databse we have created. For example in a real system, a temperature sensor can send information to tune down performance by x\% and 
 the c++ function, will return the parameters to be used for least error.
 
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/Error_vs_Params.png}}
+\caption{Here z-axis denotes the number of temporal threads used.}
+\label{ca_evp} 
+\end{figure}
+    
+\begin{figure}[htbp]
+\centerline{\includegraphics{plots/CompleteAnalysis_rVe.png}}
+\caption{The parameters corresponding to bottom left portion of graph are best to use when on a low computational budget}
+\label{ca_rve} 
+\end{figure}
+    
 \section{Trade-Off Analysis}
 
 Trade Off Analysis Goes Here
