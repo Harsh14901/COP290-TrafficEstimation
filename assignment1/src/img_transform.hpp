@@ -1,10 +1,7 @@
 #ifndef IMG_TRANSFORM_H
 #define IMG_TRANSFORM_H
 
-#include <bits/stdc++.h>
-
 #include <config.hpp>
-#include <opencv2/opencv.hpp>
 #include <util/arg_parser.hpp>
 using namespace cv;
 using namespace std;

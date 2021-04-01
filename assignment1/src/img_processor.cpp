@@ -26,7 +26,8 @@ void train_static_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
 }
 
 void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
-                 VideoCapture& cap, Mat& fg_mask, const Size& resolution) {
+                 VideoCapture& cap, Mat& fg_mask, const Size& resolution,
+                 const Rect& cropping_rect) {
   Mat frame;
   for (int i = 0; i < bg_sub->getHistory(); i++) {
     cap.read(frame);
@@ -35,6 +36,7 @@ void train_bgsub(cv::Ptr<cv::BackgroundSubtractorMOG2>& bg_sub,
       throw "Insufficient Video Stream";
     }
     preprocess_frame(frame, resolution);
+    frame = frame(cropping_rect);
 
     bg_sub->apply(frame, fg_mask, learning_rate);
   }
@@ -65,8 +67,6 @@ void opticalFlow(const Mat& prvs, const Mat& next, Mat& dst) {
 
   inRange(hsv, Scalar(0.47, 0, 0.2), Scalar(0.57, 255, 1), dst);
   hsv.convertTo(hsv8, CV_8U, 255.0);
-  // cvtColor(hsv8, bgr, COLOR_HSV2BGR);
-  // return _hsv[2];
 }
 
 void preprocess_frame(Mat& frame, const Size& resolution) {
@@ -81,37 +81,42 @@ void preprocess_frame(Mat& frame, const Size& resolution) {
 }
 
 // Takes grayscale images as input
-void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_skip){
-  
-
+void sparse_optical_flow(Mat& prvs, Mat& next, Mat& fg_mask, Mat& dst,
+                       int frame_skip) {
   dst = Mat(next.rows, next.cols, CV_8UC1, Scalar(0));
 
-  int frame_area = prvs.rows*prvs.cols;
+  int frame_area = prvs.rows * prvs.cols;
 
-  vector<Point2f> p0, p1,p0r;
+  vector<Point2f> p0, p1, p0r;
   goodFeaturesToTrack(prvs, p0, 100, 0.3, 7, Mat(), 7, false, 0.04);
 
-  if(p0.size()==0){
-    return; 
+  if (p0.size() == 0) {
+    return;
   }
 
   // calculate optical flow
   vector<uchar> status;
   vector<float> err;
-  TermCriteria criteria = TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
+  TermCriteria criteria =
+      TermCriteria((TermCriteria::COUNT) + (TermCriteria::EPS), 10, 0.03);
 
-  calcOpticalFlowPyrLK(prvs, next, p0, p1, status, err, Size(15,15), 2, criteria);
-  calcOpticalFlowPyrLK(next, prvs, p1, p0r, status, err, Size(15,15), 2, criteria); //Calculates in reverse order
-
+  calcOpticalFlowPyrLK(prvs, next, p0, p1, status, err, Size(15, 15), 2,
+                       criteria);
+  calcOpticalFlowPyrLK(next, prvs, p1, p0r, status, err, Size(15, 15), 2,
+                       criteria);  // Calculates in reverse order
 
   vector<Point2f> good_points;
 
-  for(uint i = 0; i < p0.size(); i++)
-  {
-      if(status[i]!=1) continue;
+  for (uint i = 0; i < p0.size(); i++) {
+    if (status[i] != 1) continue;
 
-      float good_point_val = max(abs(p0r.at(i).y-p1.at(i).y),abs(p0r.at(i).x-p1.at(i).x));
-      if(good_point_val>1){
+    float good_point_val =
+        max(abs(p0r.at(i).y - p1.at(i).y), abs(p0r.at(i).x - p1.at(i).x));
+    if (good_point_val > 1) {
+      if (p1.at(i).y - p0.at(i).y > -4 * frame_skip) continue;
+      good_points.push_back(p1[i]);
+    }
+  }
 
         if(p1.at(i).y-p0.at(i).y>-4*sqrt(frame_skip)) continue;
         good_points.push_back(p1[i]);
@@ -124,24 +129,22 @@ void sparseOpticalFlow(Mat& prvs, Mat& next, Mat& fg_mask,Mat& dst, int frame_sk
   vector<vector<Point>> contours;
   findContours(fg_mask, contours, RETR_EXTERNAL, CHAIN_APPROX_NONE);
 
-  vector<vector<Point>> goodContours; 
-  for(vector<Point> cont : contours){
+  vector<vector<Point>> goodContours;
+  for (vector<Point> cont : contours) {
     int tot = 1;
-    for(int i=0;i<good_points.size();i++){
-      int val = pointPolygonTest(cont,good_points.at(i),false);
-      if(val==-1) continue;
-      tot+=1;
+    for (uint i = 0; i < good_points.size(); i++) {
+      int val = pointPolygonTest(cont, good_points.at(i), false);
+      if (val == -1) continue;
+      tot += 1;
     }
-    if(tot>=4){
-      if(contourArea(cont)>0.5*frame_area) continue;
+    if (tot >= 4) {
+      if (contourArea(cont) > 0.5 * frame_area) continue;
       goodContours.push_back(cont);
     }
   }
 
-  fillPoly(dst,goodContours,Scalar(255));
-
+  fillPoly(dst, goodContours, Scalar(255));
 }
-
 
 void reduce_noise(Mat& fg_mask, const Mat& kernel) {
   Mat processed_img;
@@ -160,7 +163,7 @@ pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img) {
   Mat bnw_dynamic;
   threshold(dynamic_img * 255, bnw_dynamic, 60, 255, THRESH_BINARY);
   Mat processed_bnw_dynamic;
-  
+
   bnw_dynamic.copyTo(processed_bnw_dynamic);
 
   // Calculate the suitable area
@@ -177,8 +180,7 @@ pair<double, double> compute_density(const Mat& fg_mask, Mat& dynamic_img) {
   return make_pair(area, dynamic_area);
 }
 
-
-pair<double,double> compute_density(const Mat& fg_mask){
-  return make_pair(sum(fg_mask).val[0] /
-                (255.0 * fg_mask.cols * fg_mask.rows), 0);
+pair<double, double> compute_density(const Mat& fg_mask) {
+  return make_pair(sum(fg_mask).val[0] / (255.0 * fg_mask.cols * fg_mask.rows),
+                   0);
 }

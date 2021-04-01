@@ -4,7 +4,6 @@ using namespace std;
 using namespace cv;
 
 string get_image_name(string window_name, string output_dir) {
-  // auto output_dir = arg_parser.get_argument_value("output");
   if (output_dir.substr(output_dir.size() - 1, output_dir.size()) != "/") {
     output_dir += "/";
   }

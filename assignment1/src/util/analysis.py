@@ -23,8 +23,8 @@ with open(infile, 'r') as f:
   labels = f.readline().split(',')
   for line in f.readlines():
     x,y = line.split(',')
-    # data.append([float(x.strip()),float(y.strip())])
-    data.append([x.strip(),float(y.strip())])
+    data.append([float(x.strip()),float(y.strip())])
+    # data.append([x.strip(),float(y.strip())])
 
 
 
@@ -46,8 +46,9 @@ elif a == "resolution":
   #   res = data[i][0]
   #   area = int(res.split("X")[0])*int(res.split("X")[1])
   #   data[i][0] = area
+  # print(data)
 
-# data = sorted(data, key=lambda x: x[0])
+data = sorted(data, key=lambda x: x[0])
 
 x = [d[0] for d in data]
 y = [d[1] for d in data]
@@ -55,8 +56,8 @@ y = [d[1] for d in data]
 plt.title(plt_title)
 plt.xlabel(labels[0])
 plt.ylabel(labels[1])
-# plt.plot(x,y, "-o")
-plt.bar(x,y)
+plt.plot(x,y, "-o")
+# plt.bar(x,y)
 
 
 

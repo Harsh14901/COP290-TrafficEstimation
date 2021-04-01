@@ -1,7 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <bits/stdc++.h>
 #include <sys/stat.h>
 
 #include <config.hpp>

@@ -1,12 +1,10 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include <bits/stdc++.h>
-
 #include <config.hpp>
 #include <img_processor.hpp>
 #include <img_transform.hpp>
-#include <opencv2/opencv.hpp>
+#include <util/arg_parser.hpp>
 
 using namespace std;
 using namespace cv;
@@ -67,6 +65,7 @@ class AnimatedWindow : public Window {
   void get_display(Mat& dst);
 };
 
-void select_start_points(const Mat& input, const Size& resolution = base_resolution);
+void select_start_points(const Mat& input,
+                         const Size& resolution = base_resolution);
 
 #endif
