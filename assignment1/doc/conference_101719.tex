@@ -31,13 +31,13 @@
 
 
 \author{
-% \IEEEauthorblockN{Pranjal Aggarwal}
-% \IEEEauthorblockA{\textit{2$^{nd}$ Year UG Student} \\
-% \textit{Dept. of Computer Science and Engineering} \\
-% \textit{Indian Institute of Technology, Delhi}\\
-% New Delhi, India. \\
-% cs5190443@iitd.ac.in}
-
+\IEEEauthorblockN{Pranjal Aggarwal}
+\IEEEauthorblockA{\textit{2$^{nd}$ Year UG Student} \\
+\textit{Dept. of Computer Science and Engineering} \\
+\textit{Indian Institute of Technology, Delhi}\\
+New Delhi, India. \\
+cs5190443@iitd.ac.in}
+\and
 \IEEEauthorblockN{Harsh Agrawal}
 \IEEEauthorblockA{\textit{2$^{nd}$ Year UG Student} \\
 \textit{Dept. of Computer Science and Engineering} \\
@@ -71,9 +71,9 @@ In this report we investigate the various computational parameters, that can be 
 the performance as much as possible. Since we do not have Ground Truth Data,  we create a baseline model, which practically takes the largest time, but is assumed to be most accurate.
 All other models are evaluated against this baseline model. We use Mean Squared Error to analyze the tradeoff between time taken and utility of model.
 The following sections are divided as follows:
-In the next section we will discuss the basic algorithm of model developed by us to calculate traffic density. This is followed by a section on our
-approach to study the effect of runtime and utility. Further in Section 4, we develop a framework, that can assist these systems to take dynamic decisions based on ambient conditions.
-In Section 5 we discuss the overall results, after which we conclude in Section 6.
+In the next section we will discuss the basic algorithm of model developed by us to calculate traffic density. This is followed by a section on the metrics used and our
+approach to study the effect of runtime and utility. Further in the section, we develop a framework, that can assist these systems to take dynamic decisions based on ambient conditions.
+In Section 5 we discuss the Trade-Off Analysis, after which we conclude in Section 6.
 
 
 % \begin{figure}[htbp]
@@ -86,7 +86,7 @@ In Section 5 we discuss the overall results, after which we conclude in Section 
 \section{Algorithm}
     
 We run our algorithm on a real footage from CCTV camera installed at Lajpatnagar junction in New Delhi. \cite{b1}
-The camera has a wide range and is also doesn't gives a birds eye view. To solve this, we initally crop each of the frame and correct its perspective so as to get a birds eye view. 
+The camera has a wide range and also doesn't gives a birds eye view. To solve this, we initally crop each of the frame and correct its perspective so as to get a birds eye view. 
 For perspective transform, we use OpenCV's `findHomography' and `warpPerspective' algorithm. \cite{b2}
 The region to be cropped for a junction is fixed (given the orientation of camera) and is taken from the user or is hardcoded.
 Then, the background from this image is removed using MOG2 Algorithm. The Algorithm is either trained on empty photo of road or using first few frames of the input video.
@@ -96,7 +96,7 @@ While the former one is slower than the latter, it gives better results. These a
 
 \section{Metrics}
 
-To define our utility we calculate the Mean Squared Error from the baseline set of parameters. This error is average over the time of video.
+To define our utility we calculate the Mean Squared Error from the baseline set of parameters. This error is average over the time of video. Now more is the error, higher is the utility and vice-versa.
 To define the runtime, we evaluate the time taken by given video(Size: 382s). To ensure results are not varied due to other tasks on computer, 
 program runs are made on Linux Environment without explicitly running any additional software. For each set of parameters, 3 runs are performed, and their average is taken to further ensure that results are not pertubed by external factors.
 \section{Methods}
@@ -111,7 +111,7 @@ To study the effect of runtime and utility we consider five optimizations:
 \end{itemize}
 
 In this section effect on utility for each of these is studied independently. The metrics are varied and corresponding 
-utility is observed and plotted. Analysis of each of these method is included in the following subsections itself.
+utility is observed and plotted. Analysis of each of these methods is included in the following subsections itself.
 
 \subsection{Frame Sub-Sampling}
 
@@ -122,8 +122,8 @@ Thus we can say for given model, setting skip\_frames \= 6, is best
 when running on limited performance, as it is able to improve the runtime by a factor of $\approxeq$ 2.5.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_skip_frames_eVt.png}}
-\caption{We observe no suitable advantage on skipping more than 6 frames is observed.}
+\centerline{\includegraphics{plots/plot_skip_frames.png}}
+\caption{We observe, no suitable advantage is visible on skipping more than 6 frames.}
 \label{skf_evt} 
 \end{figure}
 
@@ -132,10 +132,10 @@ when running on limited performance, as it is able to improve the runtime by a f
 
 In this Method, we reduce the resolution of each frame by a factor. The conversion is done in realtime, and all the processing takes place on this downscaled image.
 % We observe a similar nature of graph as in frame subsampling, except of the fact, that this time error is much more significant. [See Fig.]
-Unlike frame subsampling, we observe a linearly decreasing graph. However the difference in error in both of these graphs is significant, with frame subsampling outperforming the resolution method.
+Unlike frame subsampling, we observe a linearly decreasing graph. However the difference in error in both of these graphs is significant, with frame subsampling outperforming the current method.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_resolution_eVt.png}}
+\centerline{\includegraphics{plots/plot_resolution.png}}
 \caption{An almost linear increase in utility error with decrease runtime is observed}
 \label{res_evt} 
 \end{figure}
@@ -154,7 +154,7 @@ Also we observe that increasing threads upto 4 has some advantage, however after
 has its own overhead. Moreover, since the sizes of images become small, the runtime advantage of vectorised algorithms is lost.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_split_frame_eVt.png}}
+\centerline{\includegraphics{plots/plot_split_frame.png}}
 \caption{We observe to get the least time, 4 threads are needed.}
 \label{smt_evt} 
 \end{figure}
@@ -165,7 +165,7 @@ We split the work temporally by giving consecutive frames to different threads f
 However there was no runtime improvements after more than 4 parallel threads were used. The reason for this is that processors have limit on number of threads they can use in parallel, and OpenCV algorithms being already heavily vectorised, the saturation is reached early.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_split_video_pVt.png}}
+\centerline{\includegraphics{plots/plot_split_video.png}}
 \caption{No sufficient advantage is seen after increasing parallel threads to more than four}
 \label{tmt_pvt} 
 \end{figure}
@@ -178,7 +178,7 @@ The reason for this behaviour is partly due to the ability of sparse method to g
 where there is always some noise. Thus it is fair to say the error from GroundTruth is sufficiently less while using sparse optical flow, and the time gain is also good. Thus it is a good method to keep computational load in check.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics{plots/plot_sparse_optical_eVt.png}}
+\centerline{\includegraphics{plots/plot_sparse_optical.png}}
 \caption{While decrease in runtime is substantial, we observe error is substantial.}
 \label{sof_pvt} 
 \end{figure}
@@ -220,7 +220,7 @@ Overall we observe choosing the right set of parameters, can decrease computatio
 In this report, we have studied the effect of tuning parameters on runtime parameters for real-time computer vision based traffic monitoring system.
 We see most methods are able to reduce the runtime significantly, with a small penalty in accuracy.
 We observe that while some methods(frame subsampling), are able to outperform other methods in almost all cases, to improve the overall runtime, right combination of multiple methods is needed.
-However, if only one method is to be used, adjustign frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in scale of few seconds and thus even decreasing video to sat 2 FPS, cannot hurt the calculations.
+However, if only one method is to be used, adjusting frame subsampling to improve runtime is the best method. One reason for this is that traffic densities change in scale of few seconds and thus even decreasing video to sat 2 FPS, cannot hurt the calculations.
 
 
 
